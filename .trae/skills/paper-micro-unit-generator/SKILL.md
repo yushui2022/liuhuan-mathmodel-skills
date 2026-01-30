@@ -47,6 +47,9 @@ description: "基于微单元模板与脚本批量生成并合并论文内容。
 
 ## 约束（必须遵守）
 
+- **Memory Interaction (必做)**:
+  - **开始生成前**：建议读取 `context-memory-keeper` 以获取最新的全局约束与风格要求；**特别注意**检查 `External Resources / Literature`，确保引用的文献与 memory 中的记录一致。
+  - **合并完成后**：必须调用 `context-memory-keeper`，更新项目进度为“论文草稿已生成”，并记录 `final_paper.md` 的路径。
 - 运行前必须满足：`paper_output/tasks.json` 已存在且可读；否则必须先调用 `quality-assurance-auditor`。
 - 合并输出以 `paper_output/final_paper.md` 为唯一权威合并稿；不要在根目录或其他目录另起“final_paper.md”，避免引用混乱。
 - 若用户目标是“论文生产完整”，本技能完成后必须确认 `paper_output/final_paper.md` 与 `paper_output/ref_check.md` 同时存在；若 `ref_check.md` 报断链，则视为未完成，需要修复后重跑合并。
@@ -82,6 +85,10 @@ description: "基于微单元模板与脚本批量生成并合并论文内容。
     - 自动生成目录与章节编号（如“1 问题背景”“2 问题提出”）。
     - 图/表/公式/参考文献的统一编号（如“图1”“表2”“式(3)”与“[4]”）。
     - 交叉引用替换与检查，对“见第X章图Y”“见式(3)”等文字进行解析并保证对应目标存在。
+  - **[New] 直接生成 Word (docx)**:
+    - 脚本内部集成了 `python-docx` 库，在合并的同时直接写入 `.docx` 文件。
+    - **不依赖 Pandoc**，无需安装额外软件即可生成。
+    - 注意：数学公式将以 LaTeX 源码形式保留在 Word 中（如 `$E=mc^2$`），需用户使用 MathType 或 Word 自带工具渲染。
 - 若发现断链或重复编号，`ref_check.md` 中会给出具体位置与建议修正方式。
 
 ### 5. 验收与调整

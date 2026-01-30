@@ -3,6 +3,14 @@ import re
 from pathlib import Path
 from typing import Dict, List
 
+try:
+    from docx import Document
+    from docx.shared import Inches, RGBColor
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    HAS_DOCX = True
+except ImportError:
+    HAS_DOCX = False
+
 
 BASE_DIR = Path.cwd()
 OUTPUT_DIR = BASE_DIR / "paper_output"
@@ -131,6 +139,82 @@ def ref_check_report(text: str) -> str:
     return "\n".join(lines) + "\n"
 
 
+class SimpleMarkdownToDocx:
+    def __init__(self):
+        if not HAS_DOCX:
+            raise ImportError("python-docx not installed")
+        self.doc = Document()
+        
+    def convert(self, md_text: str, output_path: Path):
+        self.doc.add_heading('数学建模论文 (自动生成)', 0)
+        
+        # Warning note
+        p = self.doc.add_paragraph()
+        run = p.add_run('注意：本 Word 文档由脚本直接生成（未使用 Pandoc），数学公式将显示为 LaTeX 源码。')
+        run.bold = True
+        run.font.color.rgb = RGBColor(255, 0, 0)
+        
+        def sanitize(s):
+            # Remove control characters that are not allowed in XML
+            return re.sub(r'[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD\U00010000-\U0010FFFF]', '', s)
+
+        # Simple line-based parser
+        for line in md_text.split('\n'):
+            line = sanitize(line.strip())
+            if not line:
+                continue
+            
+            # Headings
+            if line.startswith('#'):
+                level = 0
+                for char in line:
+                    if char == '#':
+                        level += 1
+                    else:
+                        break
+                text = line[level:].strip()
+                # docx headings 1-9
+                if 1 <= level <= 9:
+                    self.doc.add_heading(text, level=level)
+                else:
+                    self.doc.add_paragraph(line)
+                continue
+            
+            # Images: ![alt](path)
+            # Regex to handle image at start of line
+            img_match = re.match(r'^!\[.*?\]\((.*?)\)$', line)
+            if img_match:
+                img_rel_path = img_match.group(1)
+                
+                # Try to resolve path
+                img_path = Path(img_rel_path)
+                if not img_path.exists():
+                     # Check relative to OUTPUT_DIR
+                     img_path = OUTPUT_DIR / img_rel_path
+                
+                if not img_path.exists():
+                    # Check relative to root
+                     img_path = BASE_DIR / img_rel_path
+                     
+                if img_path.exists():
+                    try:
+                        self.doc.add_picture(str(img_path), width=Inches(6))
+                        # Center the image
+                        if self.doc.paragraphs:
+                            last_p = self.doc.paragraphs[-1]
+                            last_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    except Exception as e:
+                        self.doc.add_paragraph(f"[图片加载失败: {img_rel_path}]")
+                else:
+                    self.doc.add_paragraph(f"[图片未找到: {img_rel_path}]")
+                continue
+
+            # Default paragraph
+            self.doc.add_paragraph(line)
+            
+        self.doc.save(output_path)
+
+
 def main() -> None:
     units = collect_units_from_tasks()
     raw_text = "\n\n".join(units)
@@ -144,6 +228,18 @@ def main() -> None:
     REF_REPORT.write_text(ref_check_report(full), encoding="utf-8")
     print(f"合并完成：{FINAL_FILE}")
     print(f"引用检查：{REF_REPORT}")
+    
+    # Export to Docx directly
+    if HAS_DOCX:
+        docx_path = OUTPUT_DIR / "final_paper_direct.docx"
+        try:
+            converter = SimpleMarkdownToDocx()
+            converter.convert(full, docx_path)
+            print(f"Word导出成功：{docx_path}")
+        except Exception as e:
+            print(f"Word导出失败：{e}")
+    else:
+        print("跳过Word导出：未安装 python-docx")
 
 
 if __name__ == "__main__":

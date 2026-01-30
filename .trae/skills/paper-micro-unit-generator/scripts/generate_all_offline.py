@@ -32,71 +32,45 @@ def load_placeholders() -> dict:
 
 
 def ensure_len(text: str, min_len: int) -> str:
-    if len(text) >= min_len:
-        return text
-    filler_block = (
-        "补充说明：本节同时给出证据定位方式与复现要点。"
-        "要点：\n- 明确输入/输出与单位口径\n- 用图表/拟合优度支撑结论\n"
-    )
-    parts = [text]
-    while len("\n".join(parts)) < min_len:
-        parts.append(filler_block)
-    return "\n".join(parts)
+    # 用户反馈不需要自动填充废话，直接返回原始内容
+    return text
 
 
 def render_unit(task: dict, ph: dict, results: dict) -> str:
     section = str(task.get("section", ""))
     unit_id = str(task.get("id", ""))
-    title = str(ph.get("论文题目", "碳化硅外延层厚度的确定"))
-    software = str(ph.get("主要软件", "Python"))
-    data_desc = str(ph.get("数据附件", "附件1-4"))
-    fig_base = "paper_output/figures/step2"
-
-    sic = results.get("sic", {}) if isinstance(results.get("sic", {}), dict) else {}
-    si = results.get("si", {}) if isinstance(results.get("si", {}), dict) else {}
-
-    def fnum(v, nd=2):
-        try:
-            if v is None or (isinstance(v, float) and (math.isnan(v) or math.isinf(v))):
-                return "-"
-            return f"{float(v):.{nd}f}"
-        except Exception:
-            return "-"
-
-    sic_th = sic.get("thickness_um", {}) if isinstance(sic.get("thickness_um", {}), dict) else {}
-    si_th = si.get("thickness_um", {}) if isinstance(si.get("thickness_um", {}), dict) else {}
-
+    
+    # Generic Header
     header = f"【{section}｜{unit_id}】\n"
+    
+    # Load from placeholders with generic fallbacks
+    title = str(ph.get("论文题目", "（论文题目缺失）"))
+    
     if section == "摘要":
         if unit_id == "ABS-1":
-            return (
-                header
-                + f"本文围绕{title}，基于红外干涉反射谱建立厚度反演模型，并给出可复现的计算流程。数据来自{data_desc}，以入射角10°与15°的光谱为核心证据。\n"
-                + f"在一次反射近似下，将反射率随波数σ的振荡视为近似余弦信号，利用去趋势预处理与FFT主峰频率提取厚度特征量，再用最小二乘拟合评估拟合优度。\n"
-            )
+            return header + ph.get("摘要第一段", f"本文围绕{title}，建立数学模型并求解...") + "\n"
         if unit_id == "ABS-2":
-            return (
-                header
-                + f"对碳化硅样品，计算得到厚度在两角度下结果一致：10°为{fnum(sic_th.get('10'))} μm，15°为{fnum(sic_th.get('15'))} μm，均值{fnum(sic_th.get('mean'))} μm。\n"
-                + f"对硅样品，引入多光束干涉Airy模型并与正弦模型对照，拟合优度提升可作为多光束干涉存在的证据之一。本文所有计算与绘图均由{software}完成。\n"
-            )
+            return header + ph.get("摘要第二段", "针对问题一，我们建立了相关模型...") + "\n"
         if unit_id == "ABS-3":
-            return header + "本文的创新点在于：用频域主峰法提供稳健初值，用双角一致性作为可靠性约束，并在多光束情形下引入Airy传递函数拟合以解释尖锐条纹与谐波结构。\n"
+            return header + ph.get("摘要第三段", "针对问题二，我们构建了优化模型...") + "\n"
         if unit_id == "ABS-4":
-            return header + "可靠性方面，从角度一致性、拟合优度(R²)与残差结构三方面给出量化评估，并讨论折射率取值对厚度估计的敏感性与误差传递。\n"
-        return header + "关键词：红外干涉；外延层厚度；FFT主峰；最小二乘；Airy模型；多光束干涉。\n"
+            return header + ph.get("摘要第四段", "此外，我们还进行了灵敏度分析与模型检验...") + "\n"
+        return header + "关键词：" + ph.get("关键词", "关键词1；关键词2") + "\n"
 
     if section == "问题重述":
         if unit_id == "INTRO-1":
-            return header + "题目要求基于红外干涉反射谱确定外延层厚度。外延层与衬底折射率不同，入射红外光在两界面反射后产生干涉条纹，条纹周期与厚度、折射率与入射角共同决定。\n"
+            return header + ph.get("问题重述第一段", "题目背景介绍...") + "\n"
         if unit_id == "INTRO-2":
-            return header + "问题一：在一次反射近似下建立厚度确定的数学模型。问题二：据此设计算法并对附件1、2的碳化硅光谱给出厚度结果与可靠性分析。\n"
-        return header + "问题三：推导多光束干涉的必要条件与对精度的影响，判断附件3、4硅样品是否出现多光束干涉，建立相应厚度模型与算法；必要时讨论其对碳化硅结果的影响与消除策略。\n"
+            return header + ph.get("问题重述第二段", "具体问题描述...") + "\n"
+        return header + ph.get("问题重述第三段", "") + "\n"
 
     if section == "模型假设":
         if unit_id == "ASSUMP-1":
-            return header + "假设外延层厚度在测量区域内均匀，界面近似平行平面且光束入射角稳定；光谱测量的波数采样足够密集，可将反射率视为波数的准连续函数进行频域分析。\n"
-        return header + "假设在问题一与问题二中外延层在给定波数区间内的有效折射率可用常数近似；问题三中用等效反射率参数表征界面多次反射贡献，并通过拟合吸收未建模的幅度因子与背景项。\n"
+            return header + ph.get("模型假设第一段", "假设1：系统处于理想状态...\n假设2：忽略次要因素影响...") + "\n"
+        return header + ph.get("模型假设第二段", "") + "\n"
+    
+    # Default fallback for other sections
+    return header + f"（{section} - {unit_id} 内容生成中...）\n"
 
     if section == "符号说明":
         return (

@@ -93,6 +93,8 @@ description: "自动定位并获取权威公开数据（优先API/官方批量�
 
 ## 约束（必须遵守）
 
+- **Memory Interaction (必做)**:
+  - **获取数据后**：必须调用 `context-memory-keeper`，记录“新增数据源名称”与“存放路径”到 `Short-term Workbench`。
 - 本技能只负责“把权威数据拿到手并保证可复现”，不负责直接写论文正文；产物必须落盘到 `crawled_data/`。
 - 若数据要进入论文，必须同时满足两点：
   - `crawled_data/sources.json` 中记录可引用来源信息。

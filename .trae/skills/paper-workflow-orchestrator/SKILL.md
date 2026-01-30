@@ -9,6 +9,10 @@ description: "串联赛题解析、数据计算与微单元脚本，一键从赛
 - 串联现有技能与脚本，用尽量少的人工操作从赛题文件夹直接得到可提交的完整论文草稿。
 
 ## 自动化运行约定（Trae 内一键）
+- **零交互原则 (Zero Interaction)**: 
+  - 当用户给出赛题（或说“跑一下”、“生成论文”）时，**不要询问**“是否要生成？”、“是否需要清洗数据？”。
+  - **立即**、**沉默**地启动 `run_all.py` 脚本。
+  - 告诉用户：“正在全速生成中，预计耗时 20 分钟，请稍候...”，然后直接开始跑。
 - 用户不需要手动运行任何脚本。
 - 当用户在对话中要求“一键完成/自动跑完全流程”时，本技能应直接执行：
   - `python .trae/skills/paper-workflow-orchestrator/scripts/run_all.py`
@@ -20,13 +24,16 @@ description: "串联赛题解析、数据计算与微单元脚本，一键从赛
 
 ## 约束（必须遵守）
 
+- **Memory Interaction (必做)**:
+  - **全流程中**：作为总控，应当在每个关键步骤（清洗完、QA完、生成完）结束后，主动调用 `context-memory-keeper` 更新进度，确保如果流程中断，Memory 中留有断点记录。
 - 本技能是全项目唯一“权威一键入口”。用户只要提出“生成完整论文/一键跑完”，优先执行本技能而不是让多个技能分散运行。
 - 若 `problem_files/` 为空，必须先补齐赛题与附件数据，再运行流程。
 - 若用户分开调用了其他技能，最终仍应回到本技能或按本技能的顺序完成：清洗与出图 → QA 任务清单 → 微单元生成 → 合并。
 
 ## 完整性交付标准（以此判断是否“论文生产完整”）
 
-- 必须存在：`paper_output/final_paper.md`
+- **必须存在：`paper_output/final_paper.docx` (最终交付物，Word 格式)**
+- 必须存在：`paper_output/final_paper.md` (中间 Markdown 稿)
 - 必须存在：`paper_output/tasks.json`
 - 必须存在：`paper_output/ref_check.md`
 - 必须存在：`paper_output/micro_units/`（可允许少量单元缺失，但合并稿需能正常阅读）
@@ -64,12 +71,23 @@ description: "串联赛题解析、数据计算与微单元脚本，一键从赛
 ## 工作流程（对应 workflow_full 分步）
 
 ### 当前实现：离线一键流程（已落地）
-1. 调用 `data-cleaning-and-visualization/scripts/run_pipeline.py`：扫描 `problem_files/` 与 `crawled_data/`，产出清洗数据与图表到 `paper_output/`。
-2. 调用 `quality-assurance-auditor/scripts/pipeline.py`：检查 `problem_files/`，生成 `paper_output/tasks.json`。
-3. 调用 `paper-micro-unit-generator/scripts/generate_all_offline.py`：生成 `paper_output/micro_units/*.txt` 与 `paper_output/generate_log.json`。
-4. 调用 `paper-micro-unit-generator/scripts/merge.py`：生成 `paper_output/final_paper.md` 与 `paper_output/ref_check.md`。
+1. **[New] 外部资源获取 (Optional)**: 
+   - 调用 `authoritative-data-harvester` 或 `g-sci` (若存在) 填充 `crawled_data/`。
+   - **Memory Update**: 将获取的文献/数据源更新至 `memoryskill.md`。
+2. 调用 `data-cleaning-and-visualization/scripts/run_pipeline.py`：扫描 `problem_files/` 与 `crawled_data/`，产出清洗数据与图表到 `paper_output/`。
+3. 调用 `quality-assurance-auditor/scripts/pipeline.py`：检查 `problem_files/`，生成 `paper_output/tasks.json`。
+4. 调用 `paper-micro-unit-generator/scripts/generate_all_offline.py`：生成 `paper_output/micro_units/*.txt` 与 `paper_output/generate_log.json`。
+5. 调用 `paper-micro-unit-generator/scripts/merge.py`：生成 `paper_output/final_paper.md` 与 `paper_output/ref_check.md`，**并直接生成 `paper_output/final_paper.docx`**。
+6. **[Mandatory] Word 交付验证**: 
+   - 检查 `paper_output/final_paper.docx` 是否存在。
+   - 优先使用 `scripts/merge.py` 直接生成的 Word 版本（原生 python-docx 生成，不依赖 Pandoc）。
+   - 仅在直接生成失败时，才尝试调用 Pandoc 作为兜底方案。
+   - 确保公式、图表、目录在 Word 中显示正常。
 
 ### 分步运行（需要时才用）
+
+0. **外部资源获取**:
+   - 若需要补充文献或数据，先运行 `authoritative-data-harvester` 或其他搜索技能。
 
 1. 仅做数据清洗与可视化：
 ```bash

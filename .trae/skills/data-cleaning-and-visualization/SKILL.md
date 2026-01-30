@@ -66,6 +66,8 @@ paper_output/
 
 ## 约束（必须遵守）
 
+- **Memory Interaction (必做)**:
+  - **完成清洗后**，必须调用 `context-memory-keeper`，记录“数据质量概况（样本量/缺失情况）”与“关键图表路径”到 `Short-term Workbench`。
 - 本技能只允许读取：`problem_files/` 与 `crawled_data/`；只允许写入：`paper_output/`。
 - 任何需要在论文中出现的图表，必须从 `paper_output/figures/` 引用，避免散落在根目录或附件目录。
 - 若用户目标是“产出完整论文草稿”，本技能结束后必须进入：`quality-assurance-auditor` 或直接回到 `paper-workflow-orchestrator`，否则会出现“有图但无正文/有正文但无任务清单”的断链。

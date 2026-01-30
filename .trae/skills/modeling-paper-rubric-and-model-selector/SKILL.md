@@ -46,11 +46,13 @@ description: "按常见评分点生成建模论文结构与写作清单，并根
 - 方式2（粘贴）：
   - `paper_prompt_text: <把你的论文结构提示词全文粘贴在这里>`
 
-### 运行时整合机制（必须执行）
-在生成 A/B/C/D 任一产出前，先构造一个 `PAPER_PROMPT` 变量：
-- 若用户提供 `paper_prompt_text`：`PAPER_PROMPT = paper_prompt_text`
-- 否则若用户提供 `paper_prompt_path`：读取该文件全文，`PAPER_PROMPT = 文件内容`
-- 否则：读取本技能默认提示词文件 `references/paper_prompt_default.md`，`PAPER_PROMPT = 文件内容`
+### 运行时整合机制（推荐参考）
+在生成 A/B/C/D 任一产出前，**建议读取** `references/paper_prompt_default.md` 作为“结构参考”：
+1. **参考优先级**：此文件作为写作模板的参考，但**不强制阻塞**生成。生成的论文大纲应尽量对应此文件的章节要求，但允许模型根据实际语境发挥。
+2. **防遗忘机制**：
+   - 建议在 Prompt 中提及此文件的核心结构（如六段式摘要），引导模型生成。
+   - 若用户提供了额外的 prompt，则以用户的要求为主，此文件为辅。
+3. **鼓励扩写**：在保证逻辑通顺的前提下，**鼓励**使用学术化的“万金油”语句（如“随着…的发展”、“综上所述”）来丰富篇幅，增强文章的连贯性与体量感。
 
 然后把 `PAPER_PROMPT` 作为强约束与写作风格来源，融入到：
 - 论文大纲的章节命名、写作顺序、字数分配与语体要求
@@ -59,6 +61,12 @@ description: "按常见评分点生成建模论文结构与写作清单，并根
 
 ### 向后兼容
 不提供 `paper_prompt_path` / `paper_prompt_text` 时，本技能维持原有默认行为正常输出。
+
+## 约束（必须遵守）
+
+- **Memory Interaction (必做)**:
+  - **开始前**，检查 `memoryskill.md` 中的 `External Resources / Literature`，若存在相关文献，必须将其融入“参考文献”章节及“模型建立”部分的背景综述中。
+  - **完成后**，将生成的“论文大纲”与“模型路线”更新至 `memoryskill.md`。
 
 ## 产出（固定结构）
 ### A. 一页纸题意对齐
@@ -161,6 +169,8 @@ description: "按常见评分点生成建模论文结构与写作清单，并根
 
 ## 约束（必须遵守）
 
+- **Memory Interaction (必做)**:
+  - **完成规划后**，必须调用 `context-memory-keeper`，将“论文大纲结构”、“核心评分点”更新到 `memoryskill.md`。
 - 本技能必须输出“评分点 → 证据 → 论文位置”的映射清单；后续产文时必须能逐条落到具体章节/图表/表格，否则视为未对齐。
 - 若输出中要求“数据预处理/可视化证据”，后续必须调用 `data-cleaning-and-visualization` 产出 `paper_output/figures/`，否则该评分点缺证据。
 - 若用户目标是“论文生产完整”，本技能结束后必须明确下一步：进入 `problem-doc-model-selector` 做逐问解析，或直接进入 `paper-workflow-orchestrator` 一键生成。
