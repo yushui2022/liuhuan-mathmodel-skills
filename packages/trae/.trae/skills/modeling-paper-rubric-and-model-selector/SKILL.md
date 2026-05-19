@@ -5,6 +5,12 @@ description: "按常见评分点生成建模论文结构与写作清单，并根
 
 # 评分对齐论文结构与模型选型（Paper Rubric & Model Selector）
 
+## 执行契约
+- 上游输入：优先读取 `paper_output/step1/problem_analysis.json`。
+- 必须输出：`paper_output/plan/model_route.json`、`rubric_alignment.json`、`scoring_strategy.md`。
+- 下游交接：`quality-assurance-auditor` 读取模型路线生成 `tasks.json`；`paper-micro-unit-generator` 通过 `tasks.json` 使用模型、验证和评分字段。
+- 失败回退：若 `problem_analysis.json` 缺失，先运行 `problem-doc-model-selector`；一键流程中本步骤失败时，QA 应回退到 `problem_analysis.json`。
+
 ## 目标
 把“能拿分”的写作结构与“贴题可落地”的模型选型融合成一套可复用流程，输出：
 - 一份可直接套用的论文大纲（按题目问法定制）

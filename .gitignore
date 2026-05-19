@@ -4,6 +4,8 @@ __pycache__/
 .idea/
 
 problem_files/
+!examples/quickstart/problem_files/
+!examples/quickstart/problem_files/**
 crawled_data/
 paper_output/
 data_requirements.json

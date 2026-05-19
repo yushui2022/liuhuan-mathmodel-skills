@@ -5,6 +5,12 @@ description: "Manages persistent memory. Invoke to read active context or archiv
 
 # Context Memory Keeper
 
+## 执行契约
+- 上游输入：当前赛题约束、模型路线、数据源、图表路径、QA 结论、用户新增偏好和流程断点。
+- 必须输出：更新后的 `memoryskill.md`；当短期工作台过长时，将旧任务摘要归档到 `memory_archive.md`。
+- 下游交接：其他 skill 在复杂任务开始前读取 `memoryskill.md`，避免遗忘当前模型路线、数据来源和用户要求。
+- 失败回退：若无法安全更新记忆文件，应在本轮回复中明确保留关键结论，并提示后续手动补写到记忆文件。
+
 ## Description
 此 Skill 维护双层记忆结构，旨在解决模型上下文遗忘问题，同时保持上下文窗口的整洁。
 

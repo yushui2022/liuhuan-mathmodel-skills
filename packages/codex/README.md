@@ -42,6 +42,12 @@ problem_files/      # 放赛题 PDF/Word 和官方附件数据
 crawled_data/       # 可选，放外部补充数据
 ```
 
+第一次使用建议先复制仓库示例：
+
+```text
+examples/quickstart/problem_files/ -> your-mathmodel-project/problem_files/
+```
+
 然后让 Codex 使用：
 
 ```text

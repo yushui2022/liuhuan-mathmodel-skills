@@ -37,6 +37,20 @@ MathModel Skill 是一套面向数学建模比赛的完整 skill 工作流，把
 
 详细安装步骤见 [Agent 安装指南](docs/agent-install-guide.md)。
 
+## 3 分钟跑通示例
+
+仓库内置了一个最小示例：
+
+```text
+examples/quickstart/problem_files/
+├── sample_problem.txt
+└── sample_data.csv
+```
+
+你可以新建空项目，复制对应平台 skill 包，再复制这个 `problem_files/` 目录，然后运行一键命令。完整步骤见 [Quickstart Demo Walkthrough](docs/demo-walkthrough.md)。
+
+这个示例用于验证安装和 workflow 是否跑通；真实赛题中仍应让 Agent 根据当前题目、附件字段和模型输出二次修改数据处理、建模和图表代码。
+
 ## 仓库结构
 
 ```text
@@ -44,6 +58,7 @@ MathModel-Skill/
 ├── README.md
 ├── assets/                       # 项目 logo 等展示资源
 ├── docs/                         # 安装与使用文档
+├── examples/                     # 可直接跑通的 quickstart 示例
 ├── packages/                     # 三端原生 skill 分发包
 │   ├── trae/                     # Trae 原生包，也是当前 canonical source
 │   ├── claude/                   # Claude Code 原生包
@@ -96,6 +111,8 @@ packages/codex/AGENTS.md  -> your-project/AGENTS.md
 problem_files/      # 放赛题 PDF/Word 和官方附件数据
 crawled_data/       # 可选，放外部补充数据
 ```
+
+也可以先复制 `examples/quickstart/problem_files/` 跑通最小示例。
 
 ### 4. 一键运行
 

@@ -5,6 +5,12 @@ description: "串联赛题解析、数据计算与微单元脚本，一键从赛
 
 # 论文生成全流程编排器
 
+## 执行契约
+- 上游输入：`problem_files/` 中的赛题与附件数据；可选读取 `crawled_data/` 中的补充权威数据。
+- 必须输出：`problem_analysis.json`、`model_route.json`、`rubric_alignment.json`、`scoring_strategy.md`、数据/图表计划、`tasks.json`、微单元、`final_paper.md`、`final_paper.docx` 与 `ref_check.md`。
+- 下游交接：本技能是总入口，负责串联其他 skill；用户要“一键生成/跑完整流程”时优先调用它。
+- 失败回退：`problem_files/` 为空时阻塞；模型路线、数据计划或图表生成失败时打印 warning 并继续，让 QA 按可用契约回退。
+
 ## 目标
 - 串联现有技能与脚本，用尽量少的人工操作从赛题文件夹直接得到可提交的完整论文草稿。
 - 保持本项目的核心思路：以 skill 为主线，把“赛题解析 → 模型选择 → 数据处理 → QA → 微单元生成 → 合并交付”串成一套可执行工作流。

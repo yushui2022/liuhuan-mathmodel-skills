@@ -5,6 +5,12 @@ description: "强制审计论文生成质量，防止模型偷换、逻辑断链
 
 # 质量审计员（Quality Assurance Auditor）
 
+## 执行契约
+- 上游输入：优先读取 `paper_output/plan/model_route.json`、`rubric_alignment.json`、`data_plan.json`、`visualization_plan.json` 与 `paper_output/figure_index.json`；缺失时回退到 `paper_output/step1/problem_analysis.json`。
+- 必须输出：`paper_output/tasks.json`，并确保 `paper_output/micro_units/` 目录存在。
+- 下游交接：`paper-micro-unit-generator` 只应在 `tasks.json` 存在后生成正文；任务中必须保留模型路线、验证计划、图表建议和评分点字段。
+- 失败回退：若 `problem_files/` 为空应阻塞；若模型路线缺失则用题意分析生成任务；若题意分析也缺失才使用通用任务模板。
+
 ## 目标
 - 在论文生成的每一个关键节点插入“强制验收点”，只有审计通过才能进入下一步，防止“字数达标但逻辑错误”或“模型偷换”等隐性偷懒。
 - 提供可量化的通过/失败判定，并给出具体修改清单，确保最终论文既“厚”又“对”。
