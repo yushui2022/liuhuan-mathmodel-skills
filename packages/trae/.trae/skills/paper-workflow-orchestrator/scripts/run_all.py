@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -7,13 +8,25 @@ def main() -> int:
     root = Path(__file__).resolve().parents[4]
     os.chdir(root)
 
+    print("=== Step--1 赛题结构化分析 ===")
+    analyzer_script = root / ".trae/skills/problem-doc-model-selector/scripts/analyze_problem.py"
+    if analyzer_script.exists():
+        r_analyze = subprocess.run(
+            [sys.executable, str(analyzer_script)],
+            check=False,
+        )
+        if r_analyze.returncode != 0:
+            print("⚠️ 赛题结构化分析未成功执行，后续将使用通用任务模板。")
+    else:
+        print("   未检测到赛题分析脚本，跳过。")
+
     print("=== Step-Optional 外部资源获取 (Silent) ===")
     # 尝试调用 authoritative-data-harvester (如果脚本存在)
     harvester_script = root / ".trae/skills/authoritative-data-harvester/scripts/run.py" 
     if harvester_script.exists():
         print("   正在检查外部数据源...")
         subprocess.run(
-            ["python", str(harvester_script)],
+            [sys.executable, str(harvester_script)],
             check=False
         )
     else:
@@ -21,7 +34,7 @@ def main() -> int:
 
     print("=== Step-0 数据清洗与可视化 ===")
     r_clean = subprocess.run(
-        ["python", ".trae/skills/data-cleaning-and-visualization/scripts/run_pipeline.py"],
+        [sys.executable, ".trae/skills/data-cleaning-and-visualization/scripts/run_pipeline.py"],
         check=False,
     )
     if r_clean.returncode != 0:
@@ -31,7 +44,7 @@ def main() -> int:
     calc_script = Path("step2_calc_results.py")
     if calc_script.exists():
         r_calc = subprocess.run(
-            ["python", "step2_calc_results.py"],
+            [sys.executable, "step2_calc_results.py"],
             check=False,
         )
         if r_calc.returncode != 0:
@@ -41,7 +54,7 @@ def main() -> int:
 
     print("=== Step-2 质量审计与任务清单 ===")
     r0 = subprocess.run(
-        ["python", ".trae/skills/quality-assurance-auditor/scripts/pipeline.py"],
+        [sys.executable, ".trae/skills/quality-assurance-auditor/scripts/pipeline.py"],
         check=False,
     )
     if r0.returncode != 0:
@@ -49,7 +62,7 @@ def main() -> int:
 
     print("=== Step-3 微单元离线生成 ===")
     r1 = subprocess.run(
-        ["python", ".trae/skills/paper-micro-unit-generator/scripts/generate_all_offline.py"],
+        [sys.executable, ".trae/skills/paper-micro-unit-generator/scripts/generate_all_offline.py"],
         check=False,
     )
     if r1.returncode != 0:
@@ -57,7 +70,7 @@ def main() -> int:
 
     print("=== Step-4 合并 ===")
     r2 = subprocess.run(
-        ["python", ".trae/skills/paper-micro-unit-generator/scripts/merge.py"],
+        [sys.executable, ".trae/skills/paper-micro-unit-generator/scripts/merge.py"],
         check=False,
     )
     if r2.returncode != 0:

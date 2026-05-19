@@ -18,7 +18,7 @@ description: "串联赛题解析、数据计算与微单元脚本，一键从赛
 - 用户不需要手动运行任何脚本。
 - 当用户在对话中要求“一键完成/自动跑完全流程”时，本技能应直接执行：
   - `python .claude/skills/paper-workflow-orchestrator/scripts/run_all.py`
-  该脚本会按顺序执行：数据清洗与可视化 → QA 任务清单 → 微单元离线生成 → 合并。
+  该脚本会按顺序执行：赛题结构化分析 → 外部资源检查 → 数据清洗与可视化 → QA 动态任务清单 → 微单元离线生成 → 合并。
 
 ## 适用时机
 - 用户已经在项目根目录下按约定放好了赛题 PDF/Word 和附件数据，需要“从零到万字论文”的一条龙自动流程时。
@@ -36,6 +36,7 @@ description: "串联赛题解析、数据计算与微单元脚本，一键从赛
 
 - **必须存在：`paper_output/final_paper.docx` (最终交付物，Word 格式)**
 - 必须存在：`paper_output/final_paper.md` (中间 Markdown 稿)
+- 必须存在：`paper_output/step1/problem_analysis.json`（结构化题意分析）
 - 必须存在：`paper_output/tasks.json`
 - 必须存在：`paper_output/ref_check.md`
 - 必须存在：`paper_output/micro_units/`（可允许少量单元缺失，但合并稿需能正常阅读）
@@ -44,7 +45,7 @@ description: "串联赛题解析、数据计算与微单元脚本，一键从赛
 ## 脚本清单（本技能实际会用到的）
 - `scripts/run_all.py`：离线一键全流程入口。
   - 何时用：用户要求“一键完成/自动跑完全流程”。
-  - 做什么：先做数据清洗与可视化 → 再跑 QA 生成 `paper_output/tasks.json` → 再离线生成微单元 → 再合并成 `paper_output/final_paper.md`。
+  - 做什么：先跑 `problem-doc-model-selector/scripts/analyze_problem.py` 生成 `problem_analysis.json` → 再做数据清洗与可视化 → 再跑 QA 生成动态 `paper_output/tasks.json` → 再离线生成微单元 → 再合并成 `paper_output/final_paper.md` 和 `paper_output/final_paper.docx`。
 
 ## 前置约定
 - 目录结构建议为：
@@ -63,6 +64,8 @@ description: "串联赛题解析、数据计算与微单元脚本，一键从赛
 
 ## 输出
 - 中间文件：
+  - `paper_output/step1/problem_analysis.json`：结构化赛题分析，连接后续 QA 与正文生成。
+  - `paper_output/step1/A_题意对齐.md`、`B_论文大纲.md`、`C_评分点对齐表.md`、`D_模型路线.json`。
   - `paper_output/tasks.json`：微单元任务清单。
   - `paper_output/micro_units/*.txt`：每个微单元一个文件。
   - `paper_output/generate_log.json`：生成日志。
@@ -73,14 +76,17 @@ description: "串联赛题解析、数据计算与微单元脚本，一键从赛
 ## 工作流程（对应 workflow_full 分步）
 
 ### 当前实现：离线一键流程（已落地）
-1. **[New] 外部资源获取 (Optional)**: 
+1. **赛题结构化分析**:
+   - 调用 `problem-doc-model-selector/scripts/analyze_problem.py`，生成 `paper_output/step1/problem_analysis.json`。
+   - 将每一问的任务类型、推荐模型、验证计划和建议图表固化为后续 skill 可读取的数据契约。
+2. **外部资源获取 (Optional)**:
    - 调用 `authoritative-data-harvester` 或 `g-sci` (若存在) 填充 `crawled_data/`。
    - **Memory Update**: 将获取的文献/数据源更新至 `memoryskill.md`。
-2. 调用 `data-cleaning-and-visualization/scripts/run_pipeline.py`：扫描 `problem_files/` 与 `crawled_data/`，产出清洗数据与图表到 `paper_output/`。
-3. 调用 `quality-assurance-auditor/scripts/pipeline.py`：检查 `problem_files/`，生成 `paper_output/tasks.json`。
-4. 调用 `paper-micro-unit-generator/scripts/generate_all_offline.py`：生成 `paper_output/micro_units/*.txt` 与 `paper_output/generate_log.json`。
-5. 调用 `paper-micro-unit-generator/scripts/merge.py`：生成 `paper_output/final_paper.md` 与 `paper_output/ref_check.md`，**并直接生成 `paper_output/final_paper.docx`**。
-6. **[Mandatory] Word 交付验证**: 
+3. 调用 `data-cleaning-and-visualization/scripts/run_pipeline.py`：扫描 `problem_files/` 与 `crawled_data/`，产出清洗数据与图表到 `paper_output/`。
+4. 调用 `quality-assurance-auditor/scripts/pipeline.py`：检查 `problem_files/`，优先根据 `problem_analysis.json` 生成动态 `paper_output/tasks.json`。
+5. 调用 `paper-micro-unit-generator/scripts/generate_all_offline.py`：生成 `paper_output/micro_units/*.txt` 与 `paper_output/generate_log.json`。
+6. 调用 `paper-micro-unit-generator/scripts/merge.py`：生成 `paper_output/final_paper.md` 与 `paper_output/ref_check.md`，**并直接生成 `paper_output/final_paper.docx`**。
+7. **[Mandatory] Word 交付验证**:
    - 检查 `paper_output/final_paper.docx` 是否存在。
    - 优先使用 `scripts/merge.py` 直接生成的 Word 版本（原生 python-docx 生成，不依赖 Pandoc）。
    - 仅在直接生成失败时，才尝试调用 Pandoc 作为兜底方案。
@@ -96,17 +102,22 @@ description: "串联赛题解析、数据计算与微单元脚本，一键从赛
 python .claude/skills/data-cleaning-and-visualization/scripts/run_pipeline.py
 ```
 
-2. 仅生成任务清单（会检查 `problem_files/` 不为空）：
+2. 仅做赛题结构化分析：
+```bash
+python .claude/skills/problem-doc-model-selector/scripts/analyze_problem.py
+```
+
+3. 仅生成任务清单（会检查 `problem_files/` 不为空，并优先读取 `problem_analysis.json`）：
 ```bash
 python .claude/skills/quality-assurance-auditor/scripts/pipeline.py
 ```
 
-3. 仅生成微单元：
+4. 仅生成微单元：
 ```bash
 python .claude/skills/paper-micro-unit-generator/scripts/generate_all_offline.py
 ```
 
-4. 仅合并生成论文：
+5. 仅合并生成论文：
 ```bash
 python .claude/skills/paper-micro-unit-generator/scripts/merge.py
 ```
@@ -114,5 +125,6 @@ python .claude/skills/paper-micro-unit-generator/scripts/merge.py
 ## 常见问题
 
 - 报错“problem_files 为空”：把赛题 PDF/Word 与附件数据放进 `problem_files/` 后重跑。
+- 想要看题意拆解：查看 `paper_output/step1/problem_analysis.json` 和 `paper_output/step1/A_题意对齐.md`。
 - 想要看论文产出：最终文件是 `paper_output/final_paper.md`。
 - 想要看数据与图表：清洗数据在 `paper_output/data_cleaned/`，图表在 `paper_output/figures/`。

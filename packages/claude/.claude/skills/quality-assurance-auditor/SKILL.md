@@ -81,14 +81,20 @@ description: "强制审计论文生成质量，防止模型偷换、逻辑断链
 ## 附录 A：脚本入口（推荐）
 本 skill 的可执行脚本都放在 `scripts/` 下。
 
-当前 `scripts/pipeline.py` 是基础门禁脚本，负责初始化目录、检查 `problem_files/` 并生成 `paper_output/tasks.json`。更细的审计规则写在本 `SKILL.md` 中，Agent 在真正验收论文时必须结合正文、题面、任务清单和图表引用执行这些规则，而不能只把脚本跑通当作质量通过。
+当前 `scripts/pipeline.py` 是基础门禁脚本，负责初始化目录、检查 `problem_files/` 并生成 `paper_output/tasks.json`。
+
+- 若存在 `paper_output/step1/problem_analysis.json`，脚本会按真实子问题、任务类型、推荐模型、验证计划和建议图表动态生成微单元清单。
+- 若不存在结构化题意分析，脚本才回退到通用任务清单模板。
+- 若 `paper_output/tasks.json` 已存在，默认不覆盖；需要按最新题意重新生成时，设置 `MATHMODEL_REGENERATE_TASKS=1` 后再运行。
+
+更细的审计规则写在本 `SKILL.md` 中，Agent 在真正验收论文时必须结合正文、题面、任务清单和图表引用执行这些规则，而不能只把脚本跑通当作质量通过。
 
 **在项目根目录运行**：
 ```bash
 python .claude/skills/quality-assurance-auditor/scripts/pipeline.py
 ```
 
-**行为**：初始化目录 → 检查 `problem_files/` 是否为空（不通过则阻塞）→ 生成 `paper_output/tasks.json` → 汇报当前微单元完成进度。
+**行为**：初始化目录 → 检查 `problem_files/` 是否为空（不通过则阻塞）→ 优先读取 `paper_output/step1/problem_analysis.json` → 生成动态 `paper_output/tasks.json` → 汇报当前微单元完成进度并扫描占位痕迹。
 
 ## 目录约定（与项目全局对齐）
 - 本技能会强制要求 `problem_files/` 非空。

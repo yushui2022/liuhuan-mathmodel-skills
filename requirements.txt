@@ -4,6 +4,7 @@ matplotlib
 seaborn
 requests
 python-docx
+pypdf
 openpyxl
 xlrd
 lxml

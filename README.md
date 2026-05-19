@@ -23,6 +23,8 @@ MathModel Skill 是一套面向数学建模比赛的完整 skill 工作流，把
 
 本仓库按“完整 skill 包”分发，不把 skill 压平成单个 Markdown 文件。每个 skill 都保留自己的 `SKILL.md`、`scripts/`、`references/`、memory 文件等资源。
 
+当前升级后的关键数据契约是 `paper_output/step1/problem_analysis.json`：先把赛题拆成结构化子问题、模型路线、验证计划和建议图表，再让 QA 根据它动态生成 `tasks.json`。这样整套 skill 不再只是顺序提示，而是能用同一份结构化题意把后续生成环节串起来。
+
 ## 选择你的 Agent
 
 根据你使用的平台，只复制对应包即可：
@@ -128,6 +130,12 @@ $env:PYTHONIOENCODING="utf-8"
 
 ```text
 paper_output/
+├── step1/
+│   ├── problem_analysis.json     # 结构化题意分析，后续 skill 的数据契约
+│   ├── A_题意对齐.md
+│   ├── B_论文大纲.md
+│   ├── C_评分点对齐表.md
+│   └── D_模型路线.json
 ├── final_paper.docx              # Word 最终稿
 ├── final_paper.md                # Markdown 合并稿
 ├── tasks.json                    # 微单元任务清单
@@ -152,7 +160,7 @@ paper_output/
 
 ### 论文生成与质量审计
 
-- `quality-assurance-auditor`：作为全局门禁，检查输入目录、任务清单、微单元进度和最终产物。
+- `quality-assurance-auditor`：作为全局门禁，优先读取 `problem_analysis.json` 动态生成任务清单，并检查输入目录、微单元进度和最终产物。
 - `paper-micro-unit-generator`：把论文拆成微单元，批量生成并合并为 Markdown/Word。
 - `paper-workflow-orchestrator`：中心编排器，一键串联数据、QA、生成、合并和 Word 导出。
 

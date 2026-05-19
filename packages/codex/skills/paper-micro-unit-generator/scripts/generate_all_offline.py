@@ -56,11 +56,6 @@ def unit_number(unit_id: str) -> int:
 
 
 def entry_command() -> str:
-    parts = {part.lower() for part in Path(__file__).resolve().parts}
-    if ".claude" in parts:
-        return "python .claude/skills/paper-workflow-orchestrator/scripts/run_all.py"
-    if ".trae" in parts:
-        return "python .trae/skills/paper-workflow-orchestrator/scripts/run_all.py"
     return "python skills/paper-workflow-orchestrator/scripts/run_all.py"
 
 
@@ -173,15 +168,24 @@ def problem_name(section: str) -> str:
     return {"问题一": "问题一", "问题二": "问题二", "问题三": "问题三"}.get(section, section)
 
 
-def render_model(section: str, unit_id: str, ph: dict, results: dict) -> str:
+def render_model(section: str, unit_id: str, ph: dict, results: dict, task: dict) -> str:
     p = problem_name(section)
     n = unit_number(unit_id)
-    model = text_value(ph, [f"{p}模型", f"{p}方法", "核心模型"], "与题目任务匹配的基线模型")
-    algo = text_value(ph, [f"{p}算法", f"{p}求解方法", "核心算法"], "可复现的求解算法")
+    model_default = str(task.get("baseline_model") or "与题目任务匹配的基线模型")
+    improved_default = str(task.get("improved_model") or "结合题目需求的改进模型")
+    task_type = str(task.get("task_type") or "综合建模/统计分析")
+    validation_plan = task.get("validation_plan") if isinstance(task.get("validation_plan"), list) else []
+    figure_suggestions = task.get("figure_suggestions") if isinstance(task.get("figure_suggestions"), list) else []
+    model = text_value(ph, [f"{p}模型", f"{p}方法", "核心模型"], model_default)
+    algo = text_value(ph, [f"{p}算法", f"{p}求解方法", "核心算法"], improved_default)
     result = result_value(results, [f"{p}结果", f"{p}_result", "核心结果"], "核心数值结果需由当前赛题计算脚本生成")
-    metric = text_value(ph, [f"{p}评价指标", "评价指标"], "误差、得分、约束满足率或稳定性指标")
+    metric = text_value(
+        ph,
+        [f"{p}评价指标", "评价指标"],
+        "；".join(str(item) for item in validation_plan) or "误差、得分、约束满足率或稳定性指标",
+    )
     if n == 1:
-        return f"{p}首先需要明确输入、输出和评价口径。本文将其转化为可计算任务，并选择“{model}”作为主要建模框架。"
+        return f"{p}首先需要明确输入、输出和评价口径。根据结构化题意分析，本问属于“{task_type}”任务，本文选择“{model}”作为主要建模框架。"
     if n == 2:
         return f"模型建立时，应说明变量定义、目标函数或损失函数，并解释“{model}”为什么与题目要求、数据结构和评分点相匹配。"
     if n == 3:
@@ -189,7 +193,8 @@ def render_model(section: str, unit_id: str, ph: dict, results: dict) -> str:
     if n == 4:
         return "为了避免模型只停留在形式推导，本文应设置基线方案或对照实验，用相同数据和相同评价指标比较不同方法的效果。"
     if n == 5:
-        return f"结果展示部分应围绕题目原问展开，给出表格、图形或关键数值。当前结果摘要为：{result}。"
+        figure_text = "、".join(str(item) for item in figure_suggestions) or "表格、图形或关键数值"
+        return f"结果展示部分应围绕题目原问展开，优先给出{figure_text}。当前结果摘要为：{result}。"
     if n == 6:
         return f"模型检验阶段使用“{metric}”评价结果可靠性，并结合残差、敏感性或约束检查说明模型是否稳定。"
     if n == 7:
@@ -265,8 +270,8 @@ def render_unit(task: dict, ph: dict, results: dict) -> str:
         body = render_symbols(ph)
     elif section == "数据预处理":
         body = render_data(unit_id, ph, results)
-    elif section in {"问题一", "问题二", "问题三"}:
-        body = render_model(section, unit_id, ph, results)
+    elif section.startswith("问题"):
+        body = render_model(section, unit_id, ph, results, task)
     elif section == "结果分析":
         body = render_analysis(unit_id, ph, results)
     elif section == "模型评价":

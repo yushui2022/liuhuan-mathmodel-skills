@@ -23,6 +23,12 @@ crawled_data/       # 可选，外部补充数据
 
 ```text
 paper_output/
+├── step1/
+│   ├── problem_analysis.json
+│   ├── A_题意对齐.md
+│   ├── B_论文大纲.md
+│   ├── C_评分点对齐表.md
+│   └── D_模型路线.json
 ├── final_paper.docx
 ├── final_paper.md
 ├── tasks.json
@@ -30,6 +36,8 @@ paper_output/
 ├── data_cleaned/
 └── figures/
 ```
+
+`problem_analysis.json` 是三端共同使用的结构化题意契约。总编排器会先生成它，QA 再根据其中的子问题、模型路线、验证计划和建议图表生成动态 `tasks.json`。
 
 ## Skill 包结构
 
