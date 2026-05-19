@@ -24,6 +24,29 @@ description: "按常见评分点生成建模论文结构与写作清单，并根
 - 约束与输出：需要预测/优化/评价/分类/聚类/仿真/调度等（必须）
 - 你想强调的亮点：创新点/可解释性/可复现性（可选）
 
+## 输入契约（推荐）
+执行前优先读取：
+
+- `paper_output/step1/problem_analysis.json`
+
+如果该文件存在，必须以其中的 `questions[]` 作为唯一子问题来源，不得自行臆造、合并或丢弃子问题。
+
+## 输出契约（推荐）
+本 skill 应生成：
+
+- `paper_output/plan/model_route.json`：每一问的模型路线、验证计划、图表证据与章节落点。
+- `paper_output/plan/rubric_alignment.json`：评分点、证据形式和 QA 规则映射。
+- `paper_output/plan/scoring_strategy.md`：给人和 Agent 阅读的评分闭环说明。
+
+这些 JSON 是项目自定义 workflow contracts，不是平台内置标准。详细规则见 `docs/workflow-contracts.md`。
+
+## 脚本入口（推荐）
+```bash
+python .claude/skills/modeling-paper-rubric-and-model-selector/scripts/build_model_route.py
+```
+
+该脚本会读取 `paper_output/step1/problem_analysis.json`，并将模型路线与评分闭环写入 `paper_output/plan/`。若该文件不存在，应先运行 `problem-doc-model-selector`。
+
 ## 外部“论文结构提示词”资源（可选）
 支持把你预先准备的论文结构提示词文件（或文本）附加到本技能中，用于生成与评估。
 

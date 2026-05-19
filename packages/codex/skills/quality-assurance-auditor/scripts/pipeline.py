@@ -10,6 +10,9 @@ OUTPUT_DIR = BASE_DIR / "paper_output"
 MICRO_UNITS_DIR = OUTPUT_DIR / "micro_units"
 TASKS_FILE = OUTPUT_DIR / "tasks.json"
 PROBLEM_ANALYSIS_FILE = OUTPUT_DIR / "step1" / "problem_analysis.json"
+PLAN_DIR = OUTPUT_DIR / "plan"
+MODEL_ROUTE_FILE = PLAN_DIR / "model_route.json"
+RUBRIC_ALIGNMENT_FILE = PLAN_DIR / "rubric_alignment.json"
 
 
 def init_project() -> None:
@@ -41,6 +44,55 @@ def load_problem_analysis() -> dict | None:
         return data if isinstance(data, dict) else None
     except Exception:
         return None
+
+
+def load_model_route() -> dict | None:
+    if not MODEL_ROUTE_FILE.exists():
+        return None
+    try:
+        data = json.loads(MODEL_ROUTE_FILE.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else None
+    except Exception:
+        return None
+
+
+def load_rubric_alignment() -> dict | None:
+    if not RUBRIC_ALIGNMENT_FILE.exists():
+        return None
+    try:
+        data = json.loads(RUBRIC_ALIGNMENT_FILE.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else None
+    except Exception:
+        return None
+
+
+def rubric_points_for(question_id: str, rubric_alignment: dict | None) -> list[str]:
+    if not rubric_alignment:
+        return []
+    items = rubric_alignment.get("items")
+    if not isinstance(items, list):
+        return []
+    points = []
+    for item in items:
+        if isinstance(item, dict) and str(item.get("question_id")) == question_id:
+            point = str(item.get("rubric_point") or "").strip()
+            if point:
+                points.append(point)
+    return points
+
+
+def figure_titles(figures: object) -> list[str]:
+    if not isinstance(figures, list):
+        return []
+    titles = []
+    for item in figures:
+        if isinstance(item, dict):
+            title = str(item.get("title") or "").strip()
+        else:
+            title = str(item).strip()
+        if title:
+            titles.append(title)
+    return titles
 
 
 def question_section_name(index: int, question: dict) -> str:
@@ -144,10 +196,108 @@ def generate_dynamic_manifest(analysis: dict, target_words: int) -> list[dict]:
     return tasks
 
 
+def generate_route_manifest(model_route: dict, rubric_alignment: dict | None, target_words: int) -> list[dict]:
+    questions = model_route.get("questions")
+    if not isinstance(questions, list) or not questions:
+        questions = []
+
+    tasks: list[dict] = []
+    add_task(tasks, "ABS-1", "摘要", target_words, role="background_and_problem")
+    add_task(tasks, "ABS-2", "摘要", target_words, role="methods_overview")
+    add_task(tasks, "ABS-3", "摘要", target_words, role="results_overview")
+    add_task(tasks, "ABS-4", "摘要", target_words, role="validation_and_value")
+    add_task(tasks, "ABS-5", "摘要", 120, role="keywords")
+
+    add_task(tasks, "INTRO-1", "问题重述", target_words, role="background")
+    add_task(tasks, "INTRO-2", "问题重述", target_words, role="question_breakdown")
+    add_task(tasks, "INTRO-3", "问题重述", target_words, role="computable_tasks")
+
+    add_task(tasks, "ASSUMP-1", "模型假设", target_words, role="assumptions")
+    add_task(tasks, "ASSUMP-2", "模型假设", target_words, role="assumption_rationale")
+    add_task(tasks, "SYMBOL-1", "符号说明", target_words, role="symbol_table")
+
+    for i in range(1, 4):
+        add_task(tasks, f"DATA-{i}", "数据预处理", target_words, role="data_processing")
+
+    if not questions:
+        questions = [
+            {
+                "question_id": "Q1",
+                "title": "问题一",
+                "task_type": "综合建模/统计分析",
+                "baseline_model": "可解释基线模型",
+                "main_model": "结合题目需求的主模型",
+                "backup_models": ["可解释统计模型"],
+                "model_reason": "根据题目目标选择可解释、可验证的主模型。",
+                "formula_requirements": ["定义输入变量与输出目标", "说明核心模型函数或目标函数", "给出评价指标与检验方式"],
+                "validation": ["结果复核", "敏感性分析"],
+                "figures": [{"title": "数据概览图"}, {"title": "结果对比图"}],
+            }
+        ]
+
+    for index, question in enumerate(questions, start=1):
+        if not isinstance(question, dict):
+            continue
+        section = question_section_name(index, {"title": question.get("title")})
+        qid = str(question.get("question_id") or question.get("id") or f"Q{index}")
+        metadata = {
+            "question_id": qid,
+            "task_type": question.get("task_type", "综合建模/统计分析"),
+            "baseline_model": question.get("baseline_model", "可解释基线模型"),
+            "main_model": question.get("main_model", question.get("baseline_model", "结合题目需求的主模型")),
+            "backup_models": question.get("backup_models", []),
+            "model_reason": question.get("model_reason", ""),
+            "formula_requirements": question.get("formula_requirements", []),
+            "validation_plan": question.get("validation", []),
+            "figure_suggestions": figure_titles(question.get("figures")),
+            "figures": question.get("figures", []),
+            "rubric_points": rubric_points_for(qid, rubric_alignment),
+            "paper_sections": question.get("paper_sections", []),
+            "contract_source": "paper_output/plan/model_route.json",
+        }
+        roles = [
+            "task_definition",
+            "model_rationale",
+            "model_formulation",
+            "algorithm_design",
+            "result_presentation",
+            "validation",
+            "sensitivity",
+            "question_conclusion",
+        ]
+        for unit_index, role in enumerate(roles, start=1):
+            add_task(tasks, f"{qid}-{unit_index}", section, target_words, role=role, **metadata)
+
+    analysis_units = max(3, min(6, len(questions) + 2))
+    for i in range(1, analysis_units + 1):
+        add_task(tasks, f"ANALYSIS-{i}", "结果分析", target_words, role="result_analysis")
+
+    add_task(tasks, "EVAL-1", "模型评价", target_words, role="advantages")
+    add_task(tasks, "EVAL-2", "模型评价", target_words, role="limitations")
+    add_task(tasks, "EVAL-3", "模型评价", target_words, role="extension")
+
+    conclusion_units = max(2, min(4, len(questions) + 1))
+    for i in range(1, conclusion_units + 1):
+        add_task(tasks, f"CONCL-{i}", "结论", target_words, role="conclusion")
+
+    add_task(tasks, "REF-1", "参考文献", 160, role="references")
+    add_task(tasks, "APP-1", "附录", target_words, role="reproducibility")
+    add_task(tasks, "APP-2", "附录", target_words, role="code_and_paths")
+    return tasks
+
+
 def generate_task_manifest(target_words: int = 300, force: bool = False) -> tuple[list[dict], bool]:
     existing = load_existing_tasks()
     if existing is not None and not force:
         return existing, False
+
+    model_route = load_model_route()
+    if model_route is not None:
+        rubric_alignment = load_rubric_alignment()
+        tasks = generate_route_manifest(model_route, rubric_alignment, target_words)
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        TASKS_FILE.write_text(json.dumps(tasks, ensure_ascii=False, indent=2), encoding="utf-8")
+        return tasks, True
 
     analysis = load_problem_analysis()
     if analysis is not None:
@@ -253,7 +403,11 @@ def run_pipeline() -> int:
     tasks, generated = generate_task_manifest(target_words=270, force=force_regenerate)
     action = "已生成" if generated else "已读取已有"
     print(f"[+] {action}任务清单：{TASKS_FILE}（{len(tasks)} 个微单元）")
-    if PROBLEM_ANALYSIS_FILE.exists():
+    if MODEL_ROUTE_FILE.exists():
+        print(f"[+] 已连接模型路线契约：{MODEL_ROUTE_FILE}")
+        if RUBRIC_ALIGNMENT_FILE.exists():
+            print(f"[+] 已连接评分点契约：{RUBRIC_ALIGNMENT_FILE}")
+    elif PROBLEM_ANALYSIS_FILE.exists():
         print(f"[+] 已连接结构化赛题分析：{PROBLEM_ANALYSIS_FILE}")
     else:
         print("[!] 未找到 problem_analysis.json，已使用通用任务清单模板")

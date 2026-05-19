@@ -23,7 +23,9 @@ MathModel Skill 是一套面向数学建模比赛的完整 skill 工作流，把
 
 本仓库按“完整 skill 包”分发，不把 skill 压平成单个 Markdown 文件。每个 skill 都保留自己的 `SKILL.md`、`scripts/`、`references/`、memory 文件等资源。
 
-当前升级后的关键数据契约是 `paper_output/step1/problem_analysis.json`：先把赛题拆成结构化子问题、模型路线、验证计划和建议图表，再让 QA 根据它动态生成 `tasks.json`。这样整套 skill 不再只是顺序提示，而是能用同一份结构化题意把后续生成环节串起来。
+当前升级后的关键数据契约是 `paper_output/step1/problem_analysis.json` 和 `paper_output/plan/model_route.json`：先把赛题拆成结构化子问题，再沉淀每一问的模型路线、评分点证据和建议图表，最后让 QA 根据这些交接单动态生成 `tasks.json`。这样整套 skill 不再只是顺序提示，而是能用结构化题意和模型路线把后续生成环节串起来。
+
+这些 JSON 不是平台内置能力，而是本项目定义的 workflow contracts。详细说明见 [工作流契约说明](docs/workflow-contracts.md)。
 
 ## 选择你的 Agent
 
@@ -136,6 +138,10 @@ paper_output/
 │   ├── B_论文大纲.md
 │   ├── C_评分点对齐表.md
 │   └── D_模型路线.json
+├── plan/
+│   ├── model_route.json          # 每问模型路线与图表证据
+│   ├── rubric_alignment.json     # 评分点与证据映射
+│   └── scoring_strategy.md       # 给人和 Agent 看的评分闭环说明
 ├── final_paper.docx              # Word 最终稿
 ├── final_paper.md                # Markdown 合并稿
 ├── tasks.json                    # 微单元任务清单
@@ -151,7 +157,7 @@ paper_output/
 ### 规划与模型选择
 
 - `problem-doc-model-selector`：解析赛题 PDF/Word，抽取每一问的任务、约束、输入输出和模型方向。
-- `modeling-paper-rubric-and-model-selector`：对齐评分点、论文结构和模型路线，补全“为什么这样建模能拿分”。
+- `modeling-paper-rubric-and-model-selector`：读取 `problem_analysis.json`，生成 `model_route.json`、`rubric_alignment.json` 和 `scoring_strategy.md`，补全“为什么这样建模能拿分”。
 
 ### 数据获取、清洗与可视化
 
@@ -160,7 +166,7 @@ paper_output/
 
 ### 论文生成与质量审计
 
-- `quality-assurance-auditor`：作为全局门禁，优先读取 `problem_analysis.json` 动态生成任务清单，并检查输入目录、微单元进度和最终产物。
+- `quality-assurance-auditor`：作为全局门禁，优先读取 `model_route.json` 和 `rubric_alignment.json` 动态生成任务清单，并检查输入目录、微单元进度和最终产物。
 - `paper-micro-unit-generator`：把论文拆成微单元，批量生成并合并为 Markdown/Word。
 - `paper-workflow-orchestrator`：中心编排器，一键串联数据、QA、生成、合并和 Word 导出。
 

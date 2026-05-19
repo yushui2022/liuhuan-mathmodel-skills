@@ -20,6 +20,18 @@ def main() -> int:
     else:
         print("   未检测到赛题分析脚本，跳过。")
 
+    print("=== Step--0 模型路线与评分闭环 ===")
+    model_route_script = root / ".claude/skills/modeling-paper-rubric-and-model-selector/scripts/build_model_route.py"
+    if model_route_script.exists():
+        r_route = subprocess.run(
+            [sys.executable, str(model_route_script)],
+            check=False,
+        )
+        if r_route.returncode != 0:
+            print("⚠️ 模型路线契约未成功生成，QA 将回退到结构化题意分析。")
+    else:
+        print("   未检测到模型路线脚本，跳过。")
+
     print("=== Step-Optional 外部资源获取 (Silent) ===")
     harvester_script = root / ".claude/skills/authoritative-data-harvester/scripts/run.py"
     if harvester_script.exists():

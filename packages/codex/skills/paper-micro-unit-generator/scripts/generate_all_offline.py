@@ -168,16 +168,35 @@ def problem_name(section: str) -> str:
     return {"问题一": "问题一", "问题二": "问题二", "问题三": "问题三"}.get(section, section)
 
 
+def list_text(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    result = []
+    for item in value:
+        if isinstance(item, dict):
+            text = str(item.get("title") or item.get("rubric_point") or item.get("figure_id") or "").strip()
+        else:
+            text = str(item).strip()
+        if text:
+            result.append(text)
+    return result
+
+
 def render_model(section: str, unit_id: str, ph: dict, results: dict, task: dict) -> str:
     p = problem_name(section)
     n = unit_number(unit_id)
-    model_default = str(task.get("baseline_model") or "与题目任务匹配的基线模型")
-    improved_default = str(task.get("improved_model") or "结合题目需求的改进模型")
+    question_id = str(task.get("question_id") or p)
+    baseline_default = str(task.get("baseline_model") or "与题目任务匹配的基线模型")
+    main_default = str(task.get("main_model") or task.get("improved_model") or baseline_default or "结合题目需求的主模型")
+    backup_models = list_text(task.get("backup_models"))
+    model_reason = str(task.get("model_reason") or "该模型与题目目标、数据结构和评分点要求保持一致。")
+    formula_requirements = list_text(task.get("formula_requirements"))
     task_type = str(task.get("task_type") or "综合建模/统计分析")
     validation_plan = task.get("validation_plan") if isinstance(task.get("validation_plan"), list) else []
-    figure_suggestions = task.get("figure_suggestions") if isinstance(task.get("figure_suggestions"), list) else []
-    model = text_value(ph, [f"{p}模型", f"{p}方法", "核心模型"], model_default)
-    algo = text_value(ph, [f"{p}算法", f"{p}求解方法", "核心算法"], improved_default)
+    figure_suggestions = list_text(task.get("figure_suggestions")) or list_text(task.get("figures"))
+    rubric_points = list_text(task.get("rubric_points"))
+    model = text_value(ph, [f"{p}模型", f"{p}方法", "核心模型"], main_default)
+    algo = text_value(ph, [f"{p}算法", f"{p}求解方法", "核心算法"], main_default)
     result = result_value(results, [f"{p}结果", f"{p}_result", "核心结果"], "核心数值结果需由当前赛题计算脚本生成")
     metric = text_value(
         ph,
@@ -185,21 +204,23 @@ def render_model(section: str, unit_id: str, ph: dict, results: dict, task: dict
         "；".join(str(item) for item in validation_plan) or "误差、得分、约束满足率或稳定性指标",
     )
     if n == 1:
-        return f"{p}首先需要明确输入、输出和评价口径。根据结构化题意分析，本问属于“{task_type}”任务，本文选择“{model}”作为主要建模框架。"
+        return f"{p}（{question_id}）首先需要明确输入、输出和评价口径。根据模型路线契约，本问属于“{task_type}”任务，本文选择“{model}”作为主模型。"
     if n == 2:
-        return f"模型建立时，应说明变量定义、目标函数或损失函数，并解释“{model}”为什么与题目要求、数据结构和评分点相匹配。"
+        return f"模型建立时必须解释“{model}”的贴题性：{model_reason} 同时需要写清{('、'.join(formula_requirements) if formula_requirements else '变量定义、目标函数和评价指标')}。"
     if n == 3:
-        return f"求解过程采用“{algo}”，需要给出算法步骤、关键参数和复杂度说明，保证读者能够根据论文和附录代码复现结果。"
+        return f"求解过程围绕“{algo}”展开，需要给出算法步骤、关键参数和复杂度说明，保证读者能够根据论文和附录代码复现结果。"
     if n == 4:
-        return "为了避免模型只停留在形式推导，本文应设置基线方案或对照实验，用相同数据和相同评价指标比较不同方法的效果。"
+        backup_text = "、".join(backup_models) if backup_models else "备选模型"
+        return f"为了避免模型只停留在形式推导，本文应以“{baseline_default}”作为基线方案，并可用{backup_text}进行对照，比较不同方法的效果。"
     if n == 5:
         figure_text = "、".join(str(item) for item in figure_suggestions) or "表格、图形或关键数值"
         return f"结果展示部分应围绕题目原问展开，优先给出{figure_text}。当前结果摘要为：{result}。"
     if n == 6:
         return f"模型检验阶段使用“{metric}”评价结果可靠性，并结合残差、敏感性或约束检查说明模型是否稳定。"
     if n == 7:
-        return "若结果对某些参数、权重或数据口径敏感，应单独进行扰动分析，解释结论在合理变化范围内是否保持一致。"
-    return f"综上，{p}的论文写作应形成“任务定义 → 模型建立 → 算法求解 → 结果验证 → 回答原问”的闭环。"
+        rubric_text = "、".join(rubric_points) if rubric_points else "题意覆盖、模型合理性、结果可信和图表证据"
+        return f"敏感性分析和结果解释应对齐评分点：{rubric_text}，并说明结论在合理扰动范围内是否保持一致。"
+    return f"综上，{p}（{question_id}）必须形成“任务定义 → 模型建立 → 算法求解 → 结果验证 → 回答原问”的闭环。"
 
 
 def render_analysis(unit_id: str, ph: dict, results: dict) -> str:

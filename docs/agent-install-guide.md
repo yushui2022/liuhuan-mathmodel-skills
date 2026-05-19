@@ -29,6 +29,10 @@ paper_output/
 │   ├── B_论文大纲.md
 │   ├── C_评分点对齐表.md
 │   └── D_模型路线.json
+├── plan/
+│   ├── model_route.json
+│   ├── rubric_alignment.json
+│   └── scoring_strategy.md
 ├── final_paper.docx
 ├── final_paper.md
 ├── tasks.json
@@ -37,7 +41,7 @@ paper_output/
 └── figures/
 ```
 
-`problem_analysis.json` 是三端共同使用的结构化题意契约。总编排器会先生成它，QA 再根据其中的子问题、模型路线、验证计划和建议图表生成动态 `tasks.json`。
+`problem_analysis.json` 是三端共同使用的结构化题意契约。总编排器会先生成它，再生成 `paper_output/plan/model_route.json` 与 `rubric_alignment.json`，QA 再根据这些模型路线和评分证据生成动态 `tasks.json`。
 
 ## Skill 包结构
 
