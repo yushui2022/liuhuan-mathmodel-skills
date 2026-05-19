@@ -54,7 +54,9 @@ examples/quickstart/problem_files/ -> your-mathmodel-project/problem_files/
 使用 paper-workflow-orchestrator，开始生成数学建模论文。
 ```
 
-也可以直接运行：
+Codex 应读取 `skills/paper-workflow-orchestrator/SKILL.md`，再按流程调用其他 skill。
+
+如果只是验证安装，也可以手动运行随 skill 附带的辅助脚本：
 
 ```bash
 python skills/paper-workflow-orchestrator/scripts/run_all.py

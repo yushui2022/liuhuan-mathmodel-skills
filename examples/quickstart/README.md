@@ -22,7 +22,7 @@ examples/quickstart/
 1. 新建一个空项目目录，例如 `my-mm-demo/`。
 2. 按你的 Agent 平台复制对应 skill 包。
 3. 把本目录下的 `problem_files/` 复制到 `my-mm-demo/problem_files/`。
-4. 在 `my-mm-demo/` 根目录运行对应一键命令。
+4. 在 `my-mm-demo/` 根目录让 Agent 使用 `paper-workflow-orchestrator`。如果只是验证安装，可以手动运行下面的辅助脚本。
 
 Trae:
 

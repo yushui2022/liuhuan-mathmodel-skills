@@ -48,10 +48,12 @@ examples/quickstart/problem_files/ -> your-mathmodel-project/problem_files/
 然后对 Trae 说：
 
 ```text
-开始生成
+开始生成数学建模论文
 ```
 
-或直接运行一键脚本：
+Trae 应读取 `.trae/skills/paper-workflow-orchestrator/SKILL.md`，再按流程调用其他 skill。
+
+如果只是验证安装，也可以手动运行随 skill 附带的辅助脚本：
 
 ```bash
 python .trae/skills/paper-workflow-orchestrator/scripts/run_all.py

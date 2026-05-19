@@ -52,7 +52,17 @@ Windows PowerShell 如遇到中文编码问题，先运行：
 $env:PYTHONIOENCODING="utf-8"
 ```
 
-## 4. 一键运行
+## 4. 使用 Skill Workflow
+
+推荐方式是直接对 Agent 说：
+
+```text
+开始生成数学建模论文
+```
+
+Agent 应优先读取 `paper-workflow-orchestrator/SKILL.md`，再按 workflow 调用其他 skill。
+
+如果你只是想验证安装和示例链路，也可以手动运行随 skill 附带的辅助脚本：
 
 Trae:
 
@@ -72,14 +82,6 @@ Codex:
 python skills/paper-workflow-orchestrator/scripts/run_all.py
 ```
 
-也可以直接对 Agent 说：
-
-```text
-开始生成数学建模论文
-```
-
-Agent 应优先读取 `paper-workflow-orchestrator/SKILL.md`，再按 workflow 调用其他 skill。
-
 ## 5. 检查输出
 
 运行完成后检查：
@@ -97,7 +99,7 @@ paper_output/data_cleaned/
 paper_output/figures/
 ```
 
-如果这些文件存在，说明 skill 包安装和一键流程已经跑通。
+如果这些文件存在，说明 skill 包安装和示例 workflow 已经跑通。
 
 ## 6. 如何理解示例输出
 

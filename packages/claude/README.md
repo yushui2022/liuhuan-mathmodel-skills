@@ -57,7 +57,7 @@ Claude Code 应优先读取：
 .claude/skills/paper-workflow-orchestrator/SKILL.md
 ```
 
-也可以直接运行：
+如果只是验证安装，也可以手动运行随 skill 附带的辅助脚本：
 
 ```bash
 python .claude/skills/paper-workflow-orchestrator/scripts/run_all.py

@@ -2,11 +2,21 @@
 
 MathModel Skill 按完整 skill 包分发。请选择你使用的 Agent 平台，只复制对应目录即可。
 
-| Agent | 复制来源 | 复制到项目内 | 原生入口 | 一键命令 |
+| Agent | 复制来源 | 复制到项目内 | 原生入口 | 可选验证命令 |
 |---|---|---|---|---|
 | Trae | `packages/trae/.trae/skills/` | `.trae/skills/` | `.trae/skills/*/SKILL.md` | `python .trae/skills/paper-workflow-orchestrator/scripts/run_all.py` |
 | Claude Code | `packages/claude/.claude/skills/` + `packages/claude/CLAUDE.md` | `.claude/skills/` + `CLAUDE.md` | `.claude/skills/*/SKILL.md` | `python .claude/skills/paper-workflow-orchestrator/scripts/run_all.py` |
 | Codex | `packages/codex/skills/` + `packages/codex/AGENTS.md` | `skills/` + `AGENTS.md` | `skills/*/SKILL.md` | `python skills/paper-workflow-orchestrator/scripts/run_all.py` |
+
+## 推荐使用方式
+
+安装后，普通用户不需要先手动运行 Python 命令。把赛题和附件放进 `problem_files/` 后，直接对 Agent 说：
+
+```text
+开始生成数学建模论文
+```
+
+Agent 应优先读取 `paper-workflow-orchestrator/SKILL.md`，再按流程调用其他 skill。表格里的命令主要用于安装验证、quickstart 演示或调试，不是 skill 的唯一入口。
 
 ## 最小示例
 

@@ -47,7 +47,7 @@ examples/quickstart/problem_files/
 └── sample_data.csv
 ```
 
-你可以新建空项目，复制对应平台 skill 包，再复制这个 `problem_files/` 目录，然后运行一键命令。完整步骤见 [Quickstart Demo Walkthrough](docs/demo-walkthrough.md)。
+你可以新建空项目，复制对应平台 skill 包，再复制这个 `problem_files/` 目录，然后让 Agent 使用 `paper-workflow-orchestrator`。如果只是验证安装，也可以手动运行随 skill 附带的 `run_all.py`。完整步骤见 [Quickstart Demo Walkthrough](docs/demo-walkthrough.md)。
 
 这个示例用于验证安装和 workflow 是否跑通；真实赛题中仍应让 Agent 根据当前题目、附件字段和模型输出二次修改数据处理、建模和图表代码。
 
@@ -114,7 +114,19 @@ crawled_data/       # 可选，放外部补充数据
 
 也可以先复制 `examples/quickstart/problem_files/` 跑通最小示例。
 
-### 4. 一键运行
+### 4. 让 Agent 自动使用
+
+推荐方式是直接对 Agent 说：
+
+```text
+开始生成数学建模论文
+```
+
+Agent 应先读取 `paper-workflow-orchestrator/SKILL.md`，再按 skill 里定义的流程调用其他 skill。`run_all.py` 只是这个总编排 skill 附带的可执行辅助脚本，用来把已确定的流程顺序稳定串起来。
+
+### 5. 可选：手动验证安装
+
+如果你想确认 skill 包路径、Python 依赖和示例 workflow 是否能跑通，可以手动执行验证命令：
 
 按你安装的平台执行：
 
@@ -127,12 +139,6 @@ python .claude/skills/paper-workflow-orchestrator/scripts/run_all.py
 
 # Codex
 python skills/paper-workflow-orchestrator/scripts/run_all.py
-```
-
-也可以直接对 Agent 说：
-
-```text
-开始生成数学建模论文
 ```
 
 如果 Windows PowerShell 出现 GBK 编码问题，先执行：
@@ -204,7 +210,7 @@ problem_analysis.json -> model_route.json / rubric_alignment.json -> data_plan.j
 
 - `quality-assurance-auditor`：作为全局门禁，优先读取 `model_route.json` 和 `rubric_alignment.json` 动态生成任务清单，并检查输入目录、微单元进度和最终产物。
 - `paper-micro-unit-generator`：把论文拆成微单元，批量生成并合并为 Markdown/Word。
-- `paper-workflow-orchestrator`：中心编排器，一键串联数据、QA、生成、合并和 Word 导出。
+- `paper-workflow-orchestrator`：中心编排器，指导 Agent 按顺序串联数据、QA、生成、合并和 Word 导出；其中 `scripts/run_all.py` 可作为可选的稳定执行器。
 
 ### 辅助记忆
 
@@ -239,9 +245,9 @@ skill-name/
 
 也就是说，`scripts/` 既可以在简单场景下直接运行，也可以在复杂赛题中作为“代码级提示词”使用：让 Trae、Claude Code、Codex 先读现有脚本，再按当前赛题的数据表结构、指标含义和图表要求生成新的处理代码。
 
-## 局部重跑
+## 可选：局部重跑
 
-如果只想重跑某一步，可以按平台路径替换命令前缀。
+如果你在调试、验证安装或只想重跑某一步，可以按平台路径替换命令前缀。普通使用时不需要手动执行这些脚本，Agent 会根据对应 skill 的 `SKILL.md` 决定何时调用。
 
 以 Trae 为例：
 
