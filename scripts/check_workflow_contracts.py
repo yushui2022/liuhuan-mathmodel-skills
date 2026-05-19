@@ -8,6 +8,9 @@ BASE_DIR = Path.cwd()
 PROBLEM_ANALYSIS_FILE = BASE_DIR / "paper_output" / "step1" / "problem_analysis.json"
 MODEL_ROUTE_FILE = BASE_DIR / "paper_output" / "plan" / "model_route.json"
 RUBRIC_ALIGNMENT_FILE = BASE_DIR / "paper_output" / "plan" / "rubric_alignment.json"
+DATA_PLAN_FILE = BASE_DIR / "paper_output" / "plan" / "data_plan.json"
+VISUALIZATION_PLAN_FILE = BASE_DIR / "paper_output" / "plan" / "visualization_plan.json"
+FIGURE_INDEX_FILE = BASE_DIR / "paper_output" / "figure_index.json"
 TASKS_FILE = BASE_DIR / "paper_output" / "tasks.json"
 
 
@@ -30,6 +33,56 @@ def qids_from_model_route(data: dict[str, Any]) -> set[str]:
     if not isinstance(questions, list):
         return set()
     return {str(q.get("question_id")) for q in questions if isinstance(q, dict) and q.get("question_id")}
+
+
+def is_relative_contract_path(value: Any) -> bool:
+    text = str(value or "").strip()
+    if not text:
+        return True
+    return not Path(text).is_absolute()
+
+
+def check_optional_evidence_contracts(failures: list[str]) -> None:
+    if DATA_PLAN_FILE.exists():
+        data_plan = load_json(DATA_PLAN_FILE)
+        data_files = data_plan.get("data_files") if isinstance(data_plan, dict) else []
+        if not isinstance(data_files, list):
+            failures.append("data_plan.json 中没有 data_files[]")
+        else:
+            for item in data_files:
+                if not isinstance(item, dict):
+                    continue
+                for key in ("path", "cleaned_output"):
+                    if not is_relative_contract_path(item.get(key)):
+                        failures.append(f"data_plan.json 的 {key} 必须是相对路径：{item.get(key)}")
+
+    if VISUALIZATION_PLAN_FILE.exists():
+        visualization_plan = load_json(VISUALIZATION_PLAN_FILE)
+        figures = visualization_plan.get("figures") if isinstance(visualization_plan, dict) else []
+        if not isinstance(figures, list):
+            failures.append("visualization_plan.json 中没有 figures[]")
+        else:
+            for figure in figures:
+                if not isinstance(figure, dict):
+                    continue
+                if not str(figure.get("figure_id") or "").strip():
+                    failures.append("visualization_plan.json 中存在缺少 figure_id 的图表")
+                if not str(figure.get("output_path") or "").strip():
+                    failures.append(f"{figure.get('figure_id', '<unknown>')} 缺少 output_path")
+                if not is_relative_contract_path(figure.get("output_path")):
+                    failures.append(f"visualization_plan.json 的 output_path 必须是相对路径：{figure.get('output_path')}")
+                if not is_relative_contract_path(figure.get("data_source")):
+                    failures.append(f"visualization_plan.json 的 data_source 必须是相对路径：{figure.get('data_source')}")
+
+    if FIGURE_INDEX_FILE.exists():
+        figure_index = load_json(FIGURE_INDEX_FILE)
+        figures = figure_index.get("figures") if isinstance(figure_index, dict) else []
+        if not isinstance(figures, list):
+            failures.append("figure_index.json 中没有 figures[]")
+        else:
+            for figure in figures:
+                if isinstance(figure, dict) and not is_relative_contract_path(figure.get("path")):
+                    failures.append(f"figure_index.json 的 path 必须是相对路径：{figure.get('path')}")
 
 
 def main() -> int:
@@ -88,6 +141,8 @@ def main() -> int:
                 expected_path = str(fig.get("expected_path") or "")
                 if expected_path and Path(expected_path).is_absolute():
                     failures.append(f"expected_path 必须是相对路径：{expected_path}")
+
+    check_optional_evidence_contracts(failures)
 
     if failures:
         for failure in failures:

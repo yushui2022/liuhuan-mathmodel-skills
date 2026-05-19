@@ -84,6 +84,7 @@ description: "强制审计论文生成质量，防止模型偷换、逻辑断链
 当前 `scripts/pipeline.py` 是基础门禁脚本，负责初始化目录、检查 `problem_files/` 并生成 `paper_output/tasks.json`。
 
 - 若存在 `paper_output/plan/model_route.json`，脚本会优先按模型路线、评分点证据、主模型、验证计划和建议图表动态生成微单元清单。
+- 若存在 `paper_output/plan/data_plan.json`、`visualization_plan.json` 与 `paper_output/figure_index.json`，脚本会做轻量证据链检查：确认图表 ID、输出路径和数据路径可追溯，但不会因为计划图尚未实际生成就阻塞全流程。
 - 若不存在模型路线契约但存在 `paper_output/step1/problem_analysis.json`，脚本会按真实子问题、任务类型、推荐模型、验证计划和建议图表动态生成微单元清单。
 - 若不存在结构化题意分析，脚本才回退到通用任务清单模板。
 - 若 `paper_output/tasks.json` 已存在，默认不覆盖；需要按最新题意重新生成时，设置 `MATHMODEL_REGENERATE_TASKS=1` 后再运行。
@@ -95,7 +96,7 @@ description: "强制审计论文生成质量，防止模型偷换、逻辑断链
 python .trae/skills/quality-assurance-auditor/scripts/pipeline.py
 ```
 
-**行为**：初始化目录 → 检查 `problem_files/` 是否为空（不通过则阻塞）→ 优先读取 `paper_output/plan/model_route.json` 与 `rubric_alignment.json` → 回退读取 `paper_output/step1/problem_analysis.json` → 生成动态 `paper_output/tasks.json` → 汇报当前微单元完成进度并扫描占位痕迹。
+**行为**：初始化目录 → 检查 `problem_files/` 是否为空（不通过则阻塞）→ 优先读取 `paper_output/plan/model_route.json` 与 `rubric_alignment.json` → 读取数据/图表计划做轻量证据链提示 → 回退读取 `paper_output/step1/problem_analysis.json` → 生成动态 `paper_output/tasks.json` → 汇报当前微单元完成进度并扫描占位痕迹。
 
 ## 目录约定（与项目全局对齐）
 - 本技能会强制要求 `problem_files/` 非空。

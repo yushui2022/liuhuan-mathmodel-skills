@@ -28,6 +28,7 @@ description: "基于微单元模板与脚本批量生成并合并论文内容。
 - 可选：
   - 占位符字典：`step3_filled_placeholder.py` 中的 `PLACEHOLDER`，用于把题目、模型名、结果数值写进正文。
   - 题意对齐结果与模型路线：`paper_output/step1/problem_analysis.json`、`paper_output/plan/model_route.json`、`paper_output/plan/rubric_alignment.json`，用于指导每个微单元的写作侧重点与交叉引用。
+  - 数据与图表证据链：`paper_output/plan/data_plan.json`、`visualization_plan.json`、`paper_output/figure_index.json`，用于提醒正文里的图表、数据来源和输出路径要可追溯。
   - 若要接入大模型生成，可在此技能脚本基础上扩展生成逻辑。
 
 ## 输出
@@ -53,7 +54,7 @@ description: "基于微单元模板与脚本批量生成并合并论文内容。
   - **开始生成前**：建议读取 `context-memory-keeper` 以获取最新的全局约束与风格要求；**特别注意**检查 `External Resources / Literature`，确保引用的文献与 memory 中的记录一致。
   - **合并完成后**：必须调用 `context-memory-keeper`，更新项目进度为“论文草稿已生成”，并记录 `final_paper.md` 的路径。
 - 运行前必须满足：`paper_output/tasks.json` 已存在且可读；否则必须先调用 `quality-assurance-auditor`。
-- 若 `tasks.json` 中已经包含 `main_model`、`model_reason`、`validation_plan`、`figure_suggestions`、`rubric_points` 等字段，正文生成必须优先遵守这些模型路线与评分证据，不得脱离契约自行发挥。
+- 若 `tasks.json` 中已经包含 `main_model`、`model_reason`、`validation_plan`、`figure_suggestions`、`planned_figures`、`rubric_points` 等字段，正文生成必须优先遵守这些模型路线与评分证据，不得脱离契约自行发挥。
 - 合并输出以 `paper_output/final_paper.md` 为唯一权威合并稿；不要在根目录或其他目录另起“final_paper.md”，避免引用混乱。
 - 若用户目标是“论文生产完整”，本技能完成后必须确认 `paper_output/final_paper.md` 与 `paper_output/ref_check.md` 同时存在；若 `ref_check.md` 报断链，则视为未完成，需要修复后重跑合并。
 

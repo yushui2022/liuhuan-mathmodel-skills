@@ -7,7 +7,7 @@
 当用户要求“开始生成”“跑一下这个题”“生成数学建模论文”时，按 MathModel Skill 工作流完成：
 
 ```text
-赛题解析 -> 模型选择 -> 数据获取 -> 数据清洗与可视化 -> QA 门禁 -> 微单元生成 -> 合并 Word
+赛题解析 -> 模型选择 -> 数据获取 -> 数据与图表计划 -> 数据清洗与可视化 -> QA 门禁 -> 微单元生成 -> 合并 Word
 ```
 
 ## 原生 Skill 目录
@@ -53,6 +53,10 @@ crawled_data/
 ```text
 paper_output/final_paper.docx
 paper_output/final_paper.md
+paper_output/plan/model_route.json
+paper_output/plan/data_plan.json
+paper_output/plan/visualization_plan.json
+paper_output/figure_index.json
 paper_output/ref_check.md
 ```
 

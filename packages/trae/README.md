@@ -56,6 +56,10 @@ python .trae/skills/paper-workflow-orchestrator/scripts/run_all.py
 ```text
 paper_output/final_paper.docx
 paper_output/final_paper.md
+paper_output/plan/model_route.json
+paper_output/plan/data_plan.json
+paper_output/plan/visualization_plan.json
+paper_output/figure_index.json
 paper_output/tasks.json
 paper_output/ref_check.md
 paper_output/data_cleaned/

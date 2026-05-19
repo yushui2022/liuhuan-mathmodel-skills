@@ -13,6 +13,9 @@ PROBLEM_ANALYSIS_FILE = OUTPUT_DIR / "step1" / "problem_analysis.json"
 PLAN_DIR = OUTPUT_DIR / "plan"
 MODEL_ROUTE_FILE = PLAN_DIR / "model_route.json"
 RUBRIC_ALIGNMENT_FILE = PLAN_DIR / "rubric_alignment.json"
+DATA_PLAN_FILE = PLAN_DIR / "data_plan.json"
+VISUALIZATION_PLAN_FILE = PLAN_DIR / "visualization_plan.json"
+FIGURE_INDEX_FILE = OUTPUT_DIR / "figure_index.json"
 
 
 def init_project() -> None:
@@ -64,6 +67,91 @@ def load_rubric_alignment() -> dict | None:
         return data if isinstance(data, dict) else None
     except Exception:
         return None
+
+
+def load_json_contract(path: Path) -> dict | None:
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else None
+    except Exception:
+        return None
+
+
+def is_relative_path(value: object) -> bool:
+    text = str(value or "").strip()
+    if not text:
+        return True
+    return not Path(text).is_absolute()
+
+
+def figures_by_question(visualization_plan: dict | None) -> dict[str, list[dict]]:
+    grouped: dict[str, list[dict]] = {}
+    if not visualization_plan:
+        return grouped
+    figures = visualization_plan.get("figures")
+    if not isinstance(figures, list):
+        return grouped
+    for figure in figures:
+        if not isinstance(figure, dict):
+            continue
+        qid = str(figure.get("question_id") or "").strip()
+        if qid:
+            grouped.setdefault(qid, []).append(figure)
+    return grouped
+
+
+def check_evidence_contracts() -> list[str]:
+    warnings: list[str] = []
+    data_plan = load_json_contract(DATA_PLAN_FILE)
+    visualization_plan = load_json_contract(VISUALIZATION_PLAN_FILE)
+    figure_index = load_json_contract(FIGURE_INDEX_FILE)
+
+    if data_plan is None:
+        warnings.append(f"缺少数据处理计划：{DATA_PLAN_FILE}")
+    else:
+        data_files = data_plan.get("data_files")
+        if not isinstance(data_files, list):
+            warnings.append("data_plan.json 中没有 data_files[]")
+        else:
+            for item in data_files:
+                if not isinstance(item, dict):
+                    continue
+                for key in ("path", "cleaned_output"):
+                    if not is_relative_path(item.get(key)):
+                        warnings.append(f"data_plan.json 的 {key} 必须是相对路径：{item.get(key)}")
+
+    if visualization_plan is None:
+        warnings.append(f"缺少图表规划：{VISUALIZATION_PLAN_FILE}")
+    else:
+        figures = visualization_plan.get("figures")
+        if not isinstance(figures, list) or not figures:
+            warnings.append("visualization_plan.json 中没有 figures[]")
+        else:
+            for figure in figures:
+                if not isinstance(figure, dict):
+                    continue
+                if not str(figure.get("figure_id") or "").strip():
+                    warnings.append("visualization_plan.json 中存在缺少 figure_id 的图表")
+                if not str(figure.get("output_path") or "").strip():
+                    warnings.append(f"{figure.get('figure_id', '<unknown>')} 缺少 output_path")
+                if not is_relative_path(figure.get("output_path")):
+                    warnings.append(f"visualization_plan.json 的 output_path 必须是相对路径：{figure.get('output_path')}")
+                if not is_relative_path(figure.get("data_source")):
+                    warnings.append(f"visualization_plan.json 的 data_source 必须是相对路径：{figure.get('data_source')}")
+
+    if figure_index is None:
+        warnings.append(f"缺少图表索引：{FIGURE_INDEX_FILE}")
+    else:
+        figures = figure_index.get("figures")
+        if not isinstance(figures, list):
+            warnings.append("figure_index.json 中没有 figures[]")
+        else:
+            for figure in figures:
+                if isinstance(figure, dict) and not is_relative_path(figure.get("path")):
+                    warnings.append(f"figure_index.json 的 path 必须是相对路径：{figure.get('path')}")
+    return warnings
 
 
 def rubric_points_for(question_id: str, rubric_alignment: dict | None) -> list[str]:
@@ -196,7 +284,12 @@ def generate_dynamic_manifest(analysis: dict, target_words: int) -> list[dict]:
     return tasks
 
 
-def generate_route_manifest(model_route: dict, rubric_alignment: dict | None, target_words: int) -> list[dict]:
+def generate_route_manifest(
+    model_route: dict,
+    rubric_alignment: dict | None,
+    target_words: int,
+    visualization_plan: dict | None = None,
+) -> list[dict]:
     questions = model_route.get("questions")
     if not isinstance(questions, list) or not questions:
         questions = []
@@ -235,11 +328,16 @@ def generate_route_manifest(model_route: dict, rubric_alignment: dict | None, ta
             }
         ]
 
+    planned_figures_by_qid = figures_by_question(visualization_plan)
     for index, question in enumerate(questions, start=1):
         if not isinstance(question, dict):
             continue
         section = question_section_name(index, {"title": question.get("title")})
         qid = str(question.get("question_id") or question.get("id") or f"Q{index}")
+        planned_figures = planned_figures_by_qid.get(qid, [])
+        route_figure_titles = figure_titles(question.get("figures"))
+        planned_figure_titles = figure_titles(planned_figures)
+        figure_suggestions = list(dict.fromkeys(route_figure_titles + planned_figure_titles))
         metadata = {
             "question_id": qid,
             "task_type": question.get("task_type", "综合建模/统计分析"),
@@ -249,8 +347,9 @@ def generate_route_manifest(model_route: dict, rubric_alignment: dict | None, ta
             "model_reason": question.get("model_reason", ""),
             "formula_requirements": question.get("formula_requirements", []),
             "validation_plan": question.get("validation", []),
-            "figure_suggestions": figure_titles(question.get("figures")),
+            "figure_suggestions": figure_suggestions,
             "figures": question.get("figures", []),
+            "planned_figures": planned_figures,
             "rubric_points": rubric_points_for(qid, rubric_alignment),
             "paper_sections": question.get("paper_sections", []),
             "contract_source": "paper_output/plan/model_route.json",
@@ -294,7 +393,8 @@ def generate_task_manifest(target_words: int = 300, force: bool = False) -> tupl
     model_route = load_model_route()
     if model_route is not None:
         rubric_alignment = load_rubric_alignment()
-        tasks = generate_route_manifest(model_route, rubric_alignment, target_words)
+        visualization_plan = load_json_contract(VISUALIZATION_PLAN_FILE)
+        tasks = generate_route_manifest(model_route, rubric_alignment, target_words, visualization_plan)
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         TASKS_FILE.write_text(json.dumps(tasks, ensure_ascii=False, indent=2), encoding="utf-8")
         return tasks, True
@@ -411,6 +511,16 @@ def run_pipeline() -> int:
         print(f"[+] 已连接结构化赛题分析：{PROBLEM_ANALYSIS_FILE}")
     else:
         print("[!] 未找到 problem_analysis.json，已使用通用任务清单模板")
+
+    evidence_warnings = check_evidence_contracts()
+    if evidence_warnings:
+        print("[!] 数据/图表证据链提示：")
+        for item in evidence_warnings[:20]:
+            print(f"    - {item}")
+        if len(evidence_warnings) > 20:
+            print(f"    - ... 共 {len(evidence_warnings)} 项")
+    else:
+        print("[+] 数据/图表证据链契约检查通过")
 
     ok, total, total_chars = verify_completeness()
     print(f"[+] 进度：{ok}/{total}")

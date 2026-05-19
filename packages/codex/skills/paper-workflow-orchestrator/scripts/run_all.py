@@ -43,7 +43,7 @@ def main() -> int:
     else:
         print("   未检测到外部数据获取脚本，跳过。")
 
-    print("=== Step-0 数据清洗与可视化 ===")
+    print("=== Step-0 数据与图表计划、清洗与可视化 ===")
     r_clean = subprocess.run(
         [sys.executable, "skills/data-cleaning-and-visualization/scripts/run_pipeline.py"],
         check=False,

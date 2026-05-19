@@ -23,7 +23,7 @@ MathModel Skill 是一套面向数学建模比赛的完整 skill 工作流，把
 
 本仓库按“完整 skill 包”分发，不把 skill 压平成单个 Markdown 文件。每个 skill 都保留自己的 `SKILL.md`、`scripts/`、`references/`、memory 文件等资源。
 
-这套 workflow 通过少量 JSON 文件沉淀中间判断，让不同 skill 能稳定交接上下文。JSON 是交接单，不是黑盒系统；详细规则见 [工作流契约说明](docs/workflow-contracts.md)。
+这套 workflow 通过少量 JSON 文件沉淀模型路线、评分证据、数据处理和图表计划，让不同 skill 能稳定交接上下文。JSON 是交接单，不是黑盒系统；详细规则见 [工作流契约说明](docs/workflow-contracts.md)。
 
 ## 选择你的 Agent
 
@@ -139,7 +139,10 @@ paper_output/
 ├── plan/
 │   ├── model_route.json          # 每问模型路线与图表证据
 │   ├── rubric_alignment.json     # 评分点与证据映射
-│   └── scoring_strategy.md       # 给人和 Agent 看的评分闭环说明
+│   ├── scoring_strategy.md       # 给人和 Agent 看的评分闭环说明
+│   ├── data_plan.json            # 数据字段、清洗任务与子问题链接
+│   └── visualization_plan.json   # 建议图表、图题、用途与输出路径
+├── figure_index.json             # 图表计划索引
 ├── final_paper.docx              # Word 最终稿
 ├── final_paper.md                # Markdown 合并稿
 ├── tasks.json                    # 微单元任务清单
@@ -153,7 +156,7 @@ paper_output/
 MathModel Skill 的 skill 之间不靠“记住上一轮对话”硬撑长流程，而是把关键中间结论写入固定 JSON，再由下一个 skill 读取：
 
 ```text
-problem_analysis.json -> model_route.json / rubric_alignment.json -> tasks.json -> micro_units -> final_paper
+problem_analysis.json -> model_route.json / rubric_alignment.json -> data_plan.json / visualization_plan.json -> tasks.json -> micro_units -> final_paper
 ```
 
 | 文件 | 生成者 | 读取者 | 作用 |
@@ -161,6 +164,9 @@ problem_analysis.json -> model_route.json / rubric_alignment.json -> tasks.json 
 | `paper_output/step1/problem_analysis.json` | `problem-doc-model-selector` | 模型路线、QA、微单元生成 | 结构化保存题意、子问题、任务类型和附件画像 |
 | `paper_output/plan/model_route.json` | `modeling-paper-rubric-and-model-selector` | QA、微单元生成 | 保存每一问的主模型、基线模型、验证计划和建议图表 |
 | `paper_output/plan/rubric_alignment.json` | `modeling-paper-rubric-and-model-selector` | QA、微单元生成 | 保存评分点、证据形式和论文落点 |
+| `paper_output/plan/data_plan.json` | `data-cleaning-and-visualization` | QA、微单元生成、后续代码生成 | 保存数据文件、字段画像、清洗任务和子问题链接 |
+| `paper_output/plan/visualization_plan.json` | `data-cleaning-and-visualization` | QA、微单元生成、后续绘图代码 | 保存建议图表、图题、用途、候选字段和输出路径 |
+| `paper_output/figure_index.json` | `data-cleaning-and-visualization` | QA、正文引用检查 | 保存计划图表索引，帮助检查图文是否断链 |
 | `paper_output/tasks.json` | `quality-assurance-auditor` | `paper-micro-unit-generator` | 保存微单元任务清单和正文生成所需的模型路线字段 |
 
 ## 核心能力
@@ -175,7 +181,7 @@ problem_analysis.json -> model_route.json / rubric_alignment.json -> tasks.json 
 ### 数据获取、清洗与可视化
 
 - `authoritative-data-harvester`：定位权威公开数据源，优先 API 或官方批量下载。
-- `data-cleaning-and-visualization`：提供数据清洗、图表生成和可视化代码样板，帮助 Agent 按更稳定的格式生成论文可用图表。
+- `data-cleaning-and-visualization`：提供数据清洗、图表生成和可视化代码样板，并生成数据/图表计划，帮助 Agent 按更稳定的格式产出论文可用图表。
 
 ### 论文生成与质量审计
 
@@ -228,7 +234,7 @@ python .trae/skills/problem-doc-model-selector/scripts/analyze_problem.py
 # 模型路线与评分闭环
 python .trae/skills/modeling-paper-rubric-and-model-selector/scripts/build_model_route.py
 
-# 数据清洗与可视化
+# 数据与图表计划、清洗与可视化
 python .trae/skills/data-cleaning-and-visualization/scripts/run_pipeline.py
 
 # QA 与任务清单
