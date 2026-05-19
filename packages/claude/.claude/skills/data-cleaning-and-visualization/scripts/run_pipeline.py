@@ -35,6 +35,15 @@ def main() -> int:
         print("❌ 数据可视化步骤失败。")
         return r2.returncode
 
+    print("\n=== Step 3: 论文级图表模板 (Paper Figure Templates) ===")
+    paper_figures_script = scripts_dir / "generate_paper_figures_from_plan.py"
+    if paper_figures_script.exists():
+        r3 = subprocess.run([sys.executable, str(paper_figures_script)], check=False)
+        if r3.returncode != 0:
+            print("⚠️ 论文级图表模板未成功生成，保留基础 EDA 图表并继续。")
+    else:
+        print("   未检测到论文级图表模板脚本，跳过。")
+
     print("\n=== 数据清洗与可视化流程完成 ===")
     print("请查看 paper_output/ 目录获取结果。")
     return 0

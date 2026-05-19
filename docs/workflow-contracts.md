@@ -12,7 +12,7 @@ JSON 只保存后续环节必须稳定读取的结构化信息；长篇解释、
 | `paper_output/plan/model_route.json` | `modeling-paper-rubric-and-model-selector` | QA、微单元生成 | 保存每一问的模型路线、验证计划、图表证据和章节落点 |
 | `paper_output/plan/rubric_alignment.json` | `modeling-paper-rubric-and-model-selector` | QA、微单元生成 | 保存评分点与证据形式的映射 |
 | `paper_output/plan/data_plan.json` | `data-cleaning-and-visualization` | QA、微单元生成、后续代码生成 | 保存数据文件、字段画像、清洗任务与子问题链接 |
-| `paper_output/plan/visualization_plan.json` | `data-cleaning-and-visualization` | QA、微单元生成、后续绘图代码 | 保存建议图表、图题、用途、候选字段与输出路径 |
+| `paper_output/plan/visualization_plan.json` | `data-cleaning-and-visualization` | QA、微单元生成、后续绘图代码 | 保存建议图表、图题、用途、候选字段、图表模板和输出路径 |
 | `paper_output/figure_index.json` | `data-cleaning-and-visualization` | QA、正文引用检查 | 保存计划图表索引，辅助检查图文断链 |
 | `paper_output/tasks.json` | `quality-assurance-auditor` | `paper-micro-unit-generator` | 保存微单元任务清单 |
 
@@ -61,3 +61,5 @@ paper_output/final_paper.docx
 高级用户可以直接检查或修改 `paper_output/plan/model_route.json`。例如把某一问的 `main_model` 改成更合适的方法后，再重新运行 QA 和微单元生成，即可让后续正文围绕新的模型路线展开。
 
 同理，`data_plan.json` 与 `visualization_plan.json` 可以被当作数据和图表的“工作清单”。真实赛题中，Agent 应读取这些契约和 `scripts/` 样板，再按当前字段、单位和图表要求二次生成或修改代码，而不是机械套用固定脚本。
+
+`paper_figure_templates.py` 提供论文级图表代码样板，`generate_paper_figures_from_plan.py` 可以先按计划生成一版草稿图并更新 `figure_index.json`。这些草稿图用于帮助 Agent 对齐图表格式和路径，正式论文仍应接入当前赛题真实模型输出。

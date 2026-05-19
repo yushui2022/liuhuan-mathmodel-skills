@@ -311,9 +311,22 @@ def choose_y_columns(dataset: dict[str, Any] | None, x_column: str) -> list[str]
 
 
 def chart_type(task_type: str, title: str, x_column: str, y_columns: list[str]) -> str:
+    title_text = str(title)
     text = f"{task_type} {title}"
-    if "热力" in text or "矩阵" in text:
+    if "残差" in title_text or "误差分布" in title_text:
+        return "residual_distribution"
+    if "敏感性" in title_text or "灵敏度" in title_text or "扰动" in title_text:
+        return "sensitivity_curve"
+    if "模型对比" in title_text or "方案对比" in title_text or "对照" in title_text:
+        return "model_comparison"
+    if "权重" in title_text:
+        return "weight_bar"
+    if "得分" in title_text or "排序" in title_text or "排名" in title_text:
+        return "score_ranking"
+    if "热力" in title_text or "矩阵" in title_text:
         return "heatmap"
+    if "真实值" in title_text or "预测值" in title_text or "预测" in title_text or "预报" in title_text:
+        return "prediction_comparison"
     if "分类" in text or "识别" in text:
         return "bar"
     if "聚类" in text or "分群" in text:
@@ -325,6 +338,22 @@ def chart_type(task_type: str, title: str, x_column: str, y_columns: list[str]) 
     if len(y_columns) >= 2:
         return "line"
     return "bar"
+
+
+def template_hint(chart_type_value: str) -> str:
+    hints = {
+        "prediction_comparison": "plot_prediction_comparison",
+        "residual_distribution": "plot_residual_distribution",
+        "sensitivity_curve": "plot_sensitivity_curve",
+        "model_comparison": "plot_model_comparison",
+        "weight_bar": "plot_weight_bar",
+        "score_ranking": "plot_score_ranking",
+        "heatmap": "plot_heatmap",
+        "scatter": "plot_scatter",
+        "bar": "plot_model_comparison",
+        "line": "plot_generic_line",
+    }
+    return hints.get(chart_type_value, "plot_generic_line")
 
 
 def first_paper_usage(question: dict[str, Any]) -> str:
@@ -413,12 +442,14 @@ def build_visualization_plan(
                 title = str(raw_figure)
                 purpose = f"支撑{qid}的模型结果、验证或敏感性分析"
                 output_path = f"paper_output/figures/{figure_id}.png"
+            chart_type_value = chart_type(task_type, title, x_column, y_columns)
             figures.append(
                 {
                     "figure_id": figure_id,
                     "question_id": qid,
                     "title": title,
-                    "chart_type": chart_type(task_type, title, x_column, y_columns),
+                    "chart_type": chart_type_value,
+                    "template_hint": template_hint(chart_type_value),
                     "data_source": data_source,
                     "candidate_x": x_column,
                     "candidate_y": y_columns,

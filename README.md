@@ -181,7 +181,7 @@ problem_analysis.json -> model_route.json / rubric_alignment.json -> data_plan.j
 ### 数据获取、清洗与可视化
 
 - `authoritative-data-harvester`：定位权威公开数据源，优先 API 或官方批量下载。
-- `data-cleaning-and-visualization`：提供数据清洗、图表生成和可视化代码样板，并生成数据/图表计划，帮助 Agent 按更稳定的格式产出论文可用图表。
+- `data-cleaning-and-visualization`：提供数据清洗、图表生成和论文级可视化代码样板，并生成数据/图表计划，帮助 Agent 按更稳定的格式产出论文可用图表。
 
 ### 论文生成与质量审计
 
@@ -216,6 +216,7 @@ skill-name/
 
 - 告诉 Agent 数据清洗应该如何组织输入、输出和中间产物。
 - 告诉 Agent 图表生成应保持怎样的尺寸、配色、标注、保存路径和论文引用口径。
+- 提供预测对比图、残差图、敏感性分析图、模型/方案对比图、权重图、排序图、热力图等论文级图表代码样板。
 - 给 Agent 一个可参考的代码结构，避免从空白状态随意发挥。
 - 在真实赛题中，应该先分析当前题目的数据格式和建模需求，再引用 `scripts/` 中的写法二次修改，或基于这些脚本重新生成适配当前赛题的新代码。
 
