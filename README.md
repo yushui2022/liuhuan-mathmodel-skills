@@ -23,9 +23,7 @@ MathModel Skill 是一套面向数学建模比赛的完整 skill 工作流，把
 
 本仓库按“完整 skill 包”分发，不把 skill 压平成单个 Markdown 文件。每个 skill 都保留自己的 `SKILL.md`、`scripts/`、`references/`、memory 文件等资源。
 
-当前升级后的关键数据契约是 `paper_output/step1/problem_analysis.json` 和 `paper_output/plan/model_route.json`：先把赛题拆成结构化子问题，再沉淀每一问的模型路线、评分点证据和建议图表，最后让 QA 根据这些交接单动态生成 `tasks.json`。这样整套 skill 不再只是顺序提示，而是能用结构化题意和模型路线把后续生成环节串起来。
-
-这些 JSON 不是平台内置能力，而是本项目定义的 workflow contracts。详细说明见 [工作流契约说明](docs/workflow-contracts.md)。
+这套 workflow 通过少量 JSON 文件沉淀中间判断，让不同 skill 能稳定交接上下文。JSON 是交接单，不是黑盒系统；详细规则见 [工作流契约说明](docs/workflow-contracts.md)。
 
 ## 选择你的 Agent
 
@@ -150,6 +148,21 @@ paper_output/
 └── figures/                      # 自动生成的图表
 ```
 
+## JSON 通信契约
+
+MathModel Skill 的 skill 之间不靠“记住上一轮对话”硬撑长流程，而是把关键中间结论写入固定 JSON，再由下一个 skill 读取：
+
+```text
+problem_analysis.json -> model_route.json / rubric_alignment.json -> tasks.json -> micro_units -> final_paper
+```
+
+| 文件 | 生成者 | 读取者 | 作用 |
+|---|---|---|---|
+| `paper_output/step1/problem_analysis.json` | `problem-doc-model-selector` | 模型路线、QA、微单元生成 | 结构化保存题意、子问题、任务类型和附件画像 |
+| `paper_output/plan/model_route.json` | `modeling-paper-rubric-and-model-selector` | QA、微单元生成 | 保存每一问的主模型、基线模型、验证计划和建议图表 |
+| `paper_output/plan/rubric_alignment.json` | `modeling-paper-rubric-and-model-selector` | QA、微单元生成 | 保存评分点、证据形式和论文落点 |
+| `paper_output/tasks.json` | `quality-assurance-auditor` | `paper-micro-unit-generator` | 保存微单元任务清单和正文生成所需的模型路线字段 |
+
 ## 核心能力
 
 这套流程包含 7 个论文生产核心 skills，另有 1 个辅助记忆 skill。
@@ -209,6 +222,12 @@ skill-name/
 以 Trae 为例：
 
 ```bash
+# 赛题结构化分析
+python .trae/skills/problem-doc-model-selector/scripts/analyze_problem.py
+
+# 模型路线与评分闭环
+python .trae/skills/modeling-paper-rubric-and-model-selector/scripts/build_model_route.py
+
 # 数据清洗与可视化
 python .trae/skills/data-cleaning-and-visualization/scripts/run_pipeline.py
 
