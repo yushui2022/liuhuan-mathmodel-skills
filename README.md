@@ -3,14 +3,16 @@
 
 # MathModel Skill
 
-### 数学建模论文自动化 Skills 流程
+### 数学建模论文自动化多 Agent 原生 Skill 流程
 
-#### 为数学建模比赛设计的赛题解析、建模、数据处理与论文生成工作流
+#### 为 Trae、Claude Code、Codex 设计的完整数学建模 Skill 包
 
 [![Core Skills](https://img.shields.io/badge/core%20skills-7-2563eb)](#四部分七个核心-skills)
+[![Trae](https://img.shields.io/badge/Trae-native-0ea5e9)](#选择你的-agent-平台)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-native-7c3aed)](#选择你的-agent-平台)
+[![Codex](https://img.shields.io/badge/Codex-native-111827)](#选择你的-agent-平台)
 [![Workflow](https://img.shields.io/badge/workflow-one--click-0ea5e9)](#30-秒上手)
 [![Output](https://img.shields.io/badge/output-docx%20%2B%20markdown-16a34a)](#项目目录约定)
-[![Python](https://img.shields.io/badge/python-3.x-334155)](#推荐使用流程)
 
 </div>
 
@@ -22,14 +24,28 @@
 
 你可以把它理解成一个“数学建模论文生产流水线”。用户只需要把赛题 PDF/Word 和附件数据放到指定文件夹，然后说“开始生成”或直接运行一键脚本，系统会按固定顺序完成清洗、出图、任务拆分、正文生成、合并和 Word 导出。
 
+本仓库按完整 skill 包分发，不把 skill 压平成单个 Markdown 文件。每个 skill 都保留自己的 `SKILL.md`、`scripts/`、`references/`、memory 文件等资源。
+
 本 README 主要面向两类人：
 
 - 想直接使用这套 skills 跑数学建模题的人。
 - 想学习如何搭建一套自己的多 skill 工作流的人。
 
+## 选择你的 Agent 平台
+
+这套项目不是只给 Trae 用。Trae、Claude Code、Codex 都有自己的原生 skill 包：
+
+| 你使用的工具 | 下载/复制这个目录 | 复制到你的项目里 | 说明 |
+|---|---|---|---|
+| Trae | `trae/.trae/skills/` | `.trae/skills/` | 当前最成熟原版 skill 包 |
+| Claude Code | `claude/.claude/skills/` + `claude/CLAUDE.md` | `.claude/skills/` + `CLAUDE.md` | Claude Code 原生 skill 包 |
+| Codex | `codex/skills/` + `codex/AGENTS.md` | `skills/` + `AGENTS.md` | Codex 原生 skill 包 |
+
+详细安装方式见 [Agent 安装指南](docs/agent-install-guide.md)。
+
 ## 30 秒上手
 
-如果你只想先跑起来，按下面三步做：
+如果你只想在当前仓库先跑起来，按下面三步做：
 
 1. 把赛题 PDF/Word 和官方附件数据放进项目根目录下的 `problem_files/`。
 2. 可选：把外部补充数据、爬虫数据、统计表放进 `crawled_data/`。
@@ -63,6 +79,10 @@ python .trae/skills/paper-workflow-orchestrator/scripts/run_all.py
 
 ```text
 liuhuan-mathmodel-skills/
+├── trae/                         # Trae 原生 skill 包
+├── claude/                       # Claude Code 原生 skill 包
+├── codex/                        # Codex 原生 skill 包
+├── docs/                         # 安装说明与平台说明
 ├── problem_files/                 # 输入：赛题 PDF/Word + 官方附件数据
 ├── crawled_data/                  # 输入：外部补充数据、权威数据、爬虫数据
 ├── paper_output/                  # 输出：中间产物、图表、最终论文
@@ -74,7 +94,7 @@ liuhuan-mathmodel-skills/
 │   ├── ref_check.md               # 引用/图表/公式断链检查
 │   ├── data_cleaned/              # 清洗后的结构化数据
 │   └── figures/                   # 可插入论文的图表
-└── .trae/skills/                  # skills 定义与脚本
+└── .trae/skills/                  # Trae 原版 canonical skill source
 ```
 
 约束很简单：

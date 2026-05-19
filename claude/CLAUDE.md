@@ -1,0 +1,79 @@
+# MathModel Skill Workflow for Claude Code
+
+你正在一个安装了 MathModel Skill 的 Claude Code 项目中工作。
+
+## 工作目标
+
+当用户要求“开始生成”“跑一下这个题”“生成数学建模论文”时，按 MathModel Skill 工作流完成：
+
+```text
+赛题解析 -> 模型选择 -> 数据获取 -> 数据清洗与可视化 -> QA 门禁 -> 微单元生成 -> 合并 Word
+```
+
+## 原生 Skill 目录
+
+Claude Code skill 包位于：
+
+```text
+.claude/skills/
+```
+
+优先读取总控 skill：
+
+```text
+.claude/skills/paper-workflow-orchestrator/SKILL.md
+```
+
+不要把这些 skill 当作普通 Markdown 摘要。每个 skill 都是完整包，可能包含：
+
+```text
+SKILL.md
+scripts/
+references/
+assets/
+memoryskill.md
+```
+
+## 输入输出约定
+
+用户应把赛题和附件放到：
+
+```text
+problem_files/
+```
+
+外部补充数据可放到：
+
+```text
+crawled_data/
+```
+
+最终产物在：
+
+```text
+paper_output/final_paper.docx
+paper_output/final_paper.md
+paper_output/ref_check.md
+```
+
+## 一键运行
+
+在项目根目录运行：
+
+```bash
+python .claude/skills/paper-workflow-orchestrator/scripts/run_all.py
+```
+
+如果 Windows 终端出现 GBK 编码问题，先运行：
+
+```powershell
+$env:PYTHONIOENCODING="utf-8"
+```
+
+## 执行规则
+
+- 不要跳过 `quality-assurance-auditor`。
+- 不要把输出散落到根目录，统一写入 `paper_output/`。
+- 不要改动 `problem_files/` 中的原始赛题和附件。
+- 当用户只要求局部重跑时，按对应 skill 的 `scripts/` 执行。
+- 若流程失败，先检查 `problem_files/` 是否非空，再检查脚本路径和依赖。

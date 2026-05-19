@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+
+problem_files/
+crawled_data/
+paper_output/
+data_requirements.json
+
+.DS_Store
+Thumbs.db
