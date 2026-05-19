@@ -1,6 +1,8 @@
 __pycache__/
 *.pyc
 
+.idea/
+
 problem_files/
 crawled_data/
 paper_output/
