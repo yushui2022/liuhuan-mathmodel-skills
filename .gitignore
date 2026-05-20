@@ -8,6 +8,8 @@ problem_files/
 !examples/quickstart/problem_files/**
 crawled_data/
 paper_output/
+!examples/cumcm2024-b-demo/paper_output/
+!examples/cumcm2024-b-demo/paper_output/**
 data_requirements.json
 
 .DS_Store

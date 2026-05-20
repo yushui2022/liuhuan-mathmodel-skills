@@ -16,6 +16,7 @@ description: "基于微单元模板与脚本批量生成并合并论文内容。
 - 保留并组织 CUMCM 风格的高质量长文提示词资产，包括章节拆解、段落/句级写作模板、评分点覆盖和交叉引用要求。
 - 配合 `scripts/generate_all_offline.py` 与 `scripts/merge.py`，可自动完成：微单元生成 → 合并 → 编号与交叉引用检查，生成 quickstart 验证草稿或低能力模型兜底草稿。
 - 正式论文不应机械拼接微单元。Agent 应把本技能作为提示词资产库、结构辅助器和局部重写来源，在证据门禁通过后进行全局写作。
+- 正式论文主写、`1 / 1.1 / 1.1.1` 范式约束、`18000-25000` 字数门禁和正式 Word 排版由 `paper-formal-writer` 负责，本技能不再承担正式论文主笔或正式 Word 排版职责。
 - `scripts/generate_all_offline.py` 是离线样板生成器：可读取 `tasks.json`、`step3_filled_placeholder.py` 和结果证据，把当前赛题的信息填入草稿。它必须输出自然论文段落，不应把微单元编号写进正文，也不应替代正式主笔。
 
 ## 适用时机
@@ -54,8 +55,8 @@ description: "基于微单元模板与脚本批量生成并合并论文内容。
 
 ## 前后衔接
 - 前置：`quality-assurance-auditor`（先生成 `paper_output/tasks.json`）。
-- 后续：一般不再需要其他产文技能；若要全局一致性把关，可再跑一次 `quality-assurance-auditor`。
-- 若想继续到完整论文草稿：回到 `paper-workflow-orchestrator`。
+- 后续：若只是 quickstart 或兜底草稿，可回到 `quality-assurance-auditor` 做一致性检查；若要正式比赛稿，必须进入 `paper-formal-writer`。
+- 若想继续到完整论文流程：回到 `paper-workflow-orchestrator`。
 
 ## 约束（必须遵守）
 
@@ -122,6 +123,8 @@ description: "基于微单元模板与脚本批量生成并合并论文内容。
   - 章节规划负责确定论文大纲和小节逻辑；本技能进一步细化到“句级/段级微单元”，更适合需要精准控制字数与评分点覆盖的场景。
 - 与 `paper-workflow-orchestrator`：
   - `paper-workflow-orchestrator` 从全流程角度串联“赛题解析→数据计算→占位符→微单元→合并”；本技能专注于其中“微单元生成与合并”这一段。
+- 与 `paper-formal-writer`：
+  - `paper-formal-writer` 负责正式论文范式、正式 outline、`final_paper_source.md` 写作约束、Word 排版和格式门禁；本技能只提供提示词资产、局部扩写和低能力模型兜底草稿。
 
 ## 防跑偏检查
 - 不要跳过占位符字典填充就开始批量生成，否则生成内容会缺少具体数值或出现风格不统一的描述。

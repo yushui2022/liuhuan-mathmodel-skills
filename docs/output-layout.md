@@ -41,8 +41,11 @@ paper_output/
 ├── micro_units/                   # 微单元文本
 ├── tasks.json                     # 微单元任务清单
 ├── generate_log.json              # 微单元生成日志
-├── final_paper.md                 # Markdown 稿；证据门禁通过后才可称为正式稿
-├── final_paper.docx               # Word 稿；证据门禁通过后才可称为正式稿
+├── final_paper.md                 # quickstart 或微单元合并草稿
+├── final_paper_source.md          # 正式论文 Markdown 源稿
+├── final_paper.docx               # Word 稿；双门禁通过后才可称为正式稿
+├── format_check_report.md         # 正式格式检查报告
+├── format_check_report.json       # 正式格式检查机器可读报告
 └── ref_check.md                   # 引用、图表和公式断链检查
 ```
 
@@ -112,19 +115,23 @@ paper_output/tables/
 
 当前赛题专用建模代码应把真实结果写回 `paper_output/results/` 和 `paper_output/tables/`。如果某些文件仍标记 `draft_contract`、`to_be_filled` 或 `needs_real_modeling`，最终正文不能把它当成真实比赛结果。
 
-## Micro Units And Word
+## Micro Units And Formal Paper
 
 ```text
 paper_output/tasks.json
 paper_output/micro_units/*.txt
 paper_output/final_paper.md
+paper_output/plan/paper_outline.json
+paper_output/final_paper_source.md
 paper_output/final_paper.docx
 paper_output/ref_check.md
+paper_output/format_check_report.md
+paper_output/format_check_report.json
 ```
 
 `tasks.json` 是微单元草稿生成和写作辅助的任务清单入口。微单元生成器应优先读取其中的 `main_model`、`model_reason`、`validation_plan`、`figure_suggestions`、`result_summary`、`key_metrics`、`tables` 和 `conclusions`。
 
-正式论文不应只机械合并微单元。Agent 应在证据门禁通过后读取完整证据链，全局撰写或改写 `final_paper.md` 与 `final_paper.docx`。若结果仍标记为 `missing`、`needs_real_modeling` 或 `scaffold_result_needs_review`，当前 Word 只能称为验证草稿。
+正式论文不应只机械合并微单元。Agent 应在证据门禁通过后读取完整证据链，先用 `paper-formal-writer` 生成 `paper_output/plan/paper_outline.json`，再全局撰写 `paper_output/final_paper_source.md`，最后格式化为 `paper_output/final_paper.docx` 并通过格式门禁。若结果仍标记为 `missing`、`needs_real_modeling` 或 `scaffold_result_needs_review`，当前 Word 只能称为验证草稿。
 
 ## Ownership
 
@@ -141,4 +148,6 @@ paper_output/ref_check.md
 | `paper_output/results/` | `model-code-and-result-generator` / Agent | 模型结果、指标和结论 |
 | `paper_output/tasks.json` | `quality-assurance-auditor` | 微单元任务清单 |
 | `paper_output/micro_units/` | `paper-micro-unit-generator` | 微单元文本和提示词辅助草稿 |
-| `paper_output/final_paper.*` | Agent + `paper-micro-unit-generator` | Markdown 与 Word 稿；证据门禁通过后才是正式稿 |
+| `paper_output/plan/paper_outline.json` | `paper-formal-writer` | 正式论文 outline 和证据引用要求 |
+| `paper_output/final_paper_source.md` | Agent + `paper-formal-writer` | 正式论文 Markdown 源稿 |
+| `paper_output/final_paper.docx` | `paper-formal-writer` | 正式 Word；证据门禁和格式门禁通过后才是正式稿 |

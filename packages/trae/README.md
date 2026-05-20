@@ -14,6 +14,7 @@ trae/
         ├── data-cleaning-and-visualization/
         ├── model-code-and-result-generator/
         ├── quality-assurance-auditor/
+        ├── paper-formal-writer/
         ├── paper-micro-unit-generator/
         ├── paper-workflow-orchestrator/
         └── context-memory-keeper/
@@ -60,7 +61,7 @@ Trae 应先读取 `.trae/skills/paper-workflow-orchestrator/SKILL.md`。这是 M
 python .trae/skills/paper-workflow-orchestrator/scripts/quickstart_run.py
 ```
 
-该命令只用于 quickstart / smoke test，输出是验证草稿，不代表正式比赛论文质量。正式赛题应由 Trae 先读取总控 skill，生成当前赛题专用代码、真实结果和证据门禁报告后再全局写作。
+该命令只用于 quickstart / smoke test，输出是验证草稿，不代表正式比赛论文质量。正式赛题应由 Trae 先读取总控 skill，生成当前赛题专用代码、真实结果和证据门禁报告后，再调用 `paper-formal-writer` 生成正式 outline、全局写作 `final_paper_source.md`、排版 Word 并通过格式门禁。
 
 ## 输出位置
 
@@ -68,6 +69,9 @@ python .trae/skills/paper-workflow-orchestrator/scripts/quickstart_run.py
 paper_output/OUTPUT_LAYOUT.md
 paper_output/final_paper.docx
 paper_output/final_paper.md
+paper_output/final_paper_source.md
+paper_output/format_check_report.md
+paper_output/format_check_report.json
 paper_output/code/data_processing/
 paper_output/code/visualization/
 paper_output/code/modeling/
@@ -78,6 +82,7 @@ paper_output/code/modeling/q2_model.py
 paper_output/code/modeling/q3_model.py
 paper_output/code/qa/
 paper_output/plan/model_route.json
+paper_output/plan/paper_outline.json
 paper_output/plan/data_plan.json
 paper_output/plan/visualization_plan.json
 paper_output/figure_index.json
@@ -98,4 +103,5 @@ paper_output/figures/
 - Trae 包是当前 canonical skill source 的原版复制。
 - 本包按完整 skill 文件夹分发，包含 `SKILL.md`、`scripts/`、`references/` 和 memory 文件。
 - `model-code-and-result-generator` 是结果证据辅助 skill，用于生成结果、指标、结论、表格契约和 `q*_model.py` 建模代码脚手架；它不是万能自动建模系统。
-- `context-memory-keeper` 是辅助记忆 skill，不计入 7 个论文生产核心 skill。
+- `paper-formal-writer` 负责 CUMCM 正式论文范式、`1 / 1.1 / 1.1.1` 标题、`18000-25000` 字数检查、Word 排版和格式门禁。
+- `context-memory-keeper` 是辅助记忆 skill，不计入 8 个论文生产核心 skill。

@@ -7,7 +7,7 @@
 当用户要求“开始生成”“跑一下这个题”“生成数学建模论文”时，按 MathModel Skill 工作流完成：
 
 ```text
-读题 -> 拆题 -> 模型路线 -> 判断附件性质 -> 生成/修改赛题专用代码 -> 运行代码 -> 真实图表/表格/结果 -> QA 门禁 -> Agent 全局写作 -> 最终 QA
+读题 -> 拆题 -> 模型路线 -> 判断附件性质 -> 生成/修改赛题专用代码 -> 运行代码 -> 真实图表/表格/结果 -> 证据门禁 -> 正式 outline -> Agent 全局写作 -> Word 排版 -> 格式门禁 -> 最终 QA
 ```
 
 ## Start Rule
@@ -64,11 +64,15 @@ crawled_data/
 paper_output/OUTPUT_LAYOUT.md
 paper_output/final_paper.docx
 paper_output/final_paper.md
+paper_output/final_paper_source.md
+paper_output/format_check_report.md
+paper_output/format_check_report.json
 paper_output/code/data_processing/
 paper_output/code/visualization/
 paper_output/code/modeling/
 paper_output/code/qa/
 paper_output/plan/model_route.json
+paper_output/plan/paper_outline.json
 paper_output/plan/data_plan.json
 paper_output/plan/visualization_plan.json
 paper_output/figure_index.json
@@ -102,6 +106,8 @@ $env:PYTHONIOENCODING="utf-8"
 - 不要跳过 `quality-assurance-auditor`。
 - 数据清洗后如果需要正文引用结果，先让 `model-code-and-result-generator` 生成或补齐结果、指标、结论和表格证据契约。
 - 若 `evidence_status` 仍为 `missing`、`needs_real_modeling` 或 `scaffold_result_needs_review`，不得把 Word 称为最终稿；必须先补齐赛题专用代码和真实结果。
+- 证据门禁通过后，进入 `paper-formal-writer`：生成 `paper_outline.json`，由 Agent 全局写 `final_paper_source.md`，再运行 `format_formal_docx.py` 和 `check_paper_format.py`。
+- 若格式门禁未通过，尤其是字数低于 `18000`、缺少 `5.1.1` 三级标题或图表未引用，不得把 Word 称为最终稿。
 - 不要把输出散落到根目录，统一写入 `paper_output/`。
 - 不要把当前赛题专用代码写回 `skills/`；先读取 skill 脚本作为样板，再在 `paper_output/code/` 下生成适配当前数据的代码。
 - 不要改动 `problem_files/` 中的原始赛题和附件。

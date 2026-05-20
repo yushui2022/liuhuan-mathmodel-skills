@@ -21,6 +21,7 @@ JSON 只保存后续环节必须稳定读取的结构化信息；长篇解释、
 | `paper_output/results/conclusions.json` | `model-code-and-result-generator` | QA、微单元生成 | 保存每问可直接回扣题目的结构化结论 |
 | `paper_output/tables/table_index.json` | `model-code-and-result-generator` / `data-cleaning-and-visualization` | QA、微单元生成、正文引用检查 | 保存论文表格索引、表题、用途、关联子问题和路径 |
 | `paper_output/tasks.json` | `quality-assurance-auditor` | `paper-micro-unit-generator` | 保存微单元任务清单 |
+| `paper_output/plan/paper_outline.json` | `paper-formal-writer` | Agent、Word 排版、格式门禁 | 保存正式论文章节、目标字数、每问图表/表格/公式/证据要求 |
 
 ## Rules
 
@@ -29,6 +30,7 @@ JSON 只保存后续环节必须稳定读取的结构化信息；长篇解释、
 - 子问题 ID 统一使用 `Q1`、`Q2`、`Q3`。
 - 结果、指标、结论和表格都必须能追溯到 `question_id`；公共数据画像表可使用 `ALL`。
 - JSON 只保存结构化交接信息，不保存完整论文正文。
+- `paper_outline.json` 是正式论文写作计划，不是正文生成器；Agent 必须读取证据链后全局写作 `final_paper_source.md`。
 - Markdown 用于解释为什么这样建模、如何对应评分点、后续生成应注意什么。
 - 下游 skill 读取更具体的 contract 时，必须保留回退能力，避免缺少某个文件就中断全流程。
 
@@ -75,10 +77,26 @@ quality-assurance-auditor
         ↓
 paper_output/tasks.json
         ↓
-paper-micro-unit-generator
+paper-micro-unit-generator (quickstart/草稿/提示词资产)
         ↓
 paper_output/final_paper.md
 paper_output/final_paper.docx
+
+正式成稿分支：
+
+quality-assurance-auditor/evidence_gate.py
+        ↓
+paper-formal-writer/build_paper_outline.py
+        ↓
+paper_output/plan/paper_outline.json
+        ↓
+Agent writes paper_output/final_paper_source.md
+        ↓
+paper-formal-writer/format_formal_docx.py
+        ↓
+paper_output/final_paper.docx
+        ↓
+paper-formal-writer/check_paper_format.py
 ```
 
 ## User Control
@@ -92,3 +110,5 @@ paper_output/final_paper.docx
 `paper_output/code/modeling/` 是当前赛题建模代码工作区。`model-code-and-result-generator` 会根据任务类型生成 `run_modeling.py`、`result_contract_io.py` 和 `q*_model.py` 脚手架；这些文件是 Agent 二次修改的起点，不是最终建模答案。
 
 `paper_output/results/` 与 `paper_output/tables/` 是结果证据层。脚本会先生成可追溯的结果、指标、结论和表格骨架；运行并修改 `q*_model.py` 后，应把真实或已复核的数值写回这些契约，再重新运行 QA，让 `tasks.json` 读取最新结果证据。
+
+`paper_output/plan/paper_outline.json` 是正式论文层的结构契约。它把题意、模型路线、结果、图表、表格和指标映射到 `1 / 1.1 / 1.1.1` 标题结构，尤其是第 5 章每个 `Q*` 对应的 `5.x` 小节。它不保存长篇正文，也不替代 Agent 写作。

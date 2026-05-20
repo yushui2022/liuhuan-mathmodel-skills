@@ -15,6 +15,7 @@ claude/
         ├── data-cleaning-and-visualization/
         ├── model-code-and-result-generator/
         ├── quality-assurance-auditor/
+        ├── paper-formal-writer/
         ├── paper-micro-unit-generator/
         ├── paper-workflow-orchestrator/
         └── context-memory-keeper/
@@ -66,7 +67,7 @@ Claude Code 应优先读取：
 python .claude/skills/paper-workflow-orchestrator/scripts/quickstart_run.py
 ```
 
-该命令只用于 quickstart / smoke test，输出是验证草稿，不代表正式比赛论文质量。正式赛题应由 Claude Code 先读取总控 skill，生成当前赛题专用代码、真实结果和证据门禁报告后再全局写作。
+该命令只用于 quickstart / smoke test，输出是验证草稿，不代表正式比赛论文质量。正式赛题应由 Claude Code 先读取总控 skill，生成当前赛题专用代码、真实结果和证据门禁报告后，再调用 `paper-formal-writer` 生成正式 outline、全局写作 `final_paper_source.md`、排版 Word 并通过格式门禁。
 
 ## 输出位置
 
@@ -74,6 +75,9 @@ python .claude/skills/paper-workflow-orchestrator/scripts/quickstart_run.py
 paper_output/OUTPUT_LAYOUT.md
 paper_output/final_paper.docx
 paper_output/final_paper.md
+paper_output/final_paper_source.md
+paper_output/format_check_report.md
+paper_output/format_check_report.json
 paper_output/code/data_processing/
 paper_output/code/visualization/
 paper_output/code/modeling/
@@ -84,6 +88,7 @@ paper_output/code/modeling/q2_model.py
 paper_output/code/modeling/q3_model.py
 paper_output/code/qa/
 paper_output/plan/model_route.json
+paper_output/plan/paper_outline.json
 paper_output/plan/data_plan.json
 paper_output/plan/visualization_plan.json
 paper_output/figure_index.json
@@ -105,3 +110,4 @@ paper_output/figures/
 - 适配只改变平台路径和平台称呼，不改变工作流设计。
 - 每个 skill 都是完整文件夹，保留脚本和参考材料。
 - `model-code-and-result-generator` 会生成结果证据契约和 `q*_model.py` 建模代码脚手架，不承诺自动解决所有赛题建模。
+- `paper-formal-writer` 负责 CUMCM 正式论文范式、`1 / 1.1 / 1.1.1` 标题、`18000-25000` 字数检查、Word 排版和格式门禁。

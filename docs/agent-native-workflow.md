@@ -13,7 +13,9 @@ MathModel Skill 的正式使用方式不是先运行一键脚本，而是让 Age
 -> 运行代码
 -> 生成真实图表、表格、指标和结论
 -> 证据门禁
--> Agent 全局写作
+-> formal outline
+-> Agent 全局写作 final_paper_source.md
+-> Word 排版与格式门禁
 -> 最终 QA
 ```
 
@@ -29,7 +31,7 @@ problem_files/
 
 ```text
 请使用 MathModel Skill，从 paper-workflow-orchestrator 开始。
-不要先跑 quickstart 脚本。请读取赛题和附件，生成模型路线，判断附件是原始数据还是结果模板，在 paper_output/code/ 中生成并运行当前赛题专用代码，产出真实图表、表格、指标和结论。证据门禁通过后，再基于完整证据链全局撰写 final_paper.md 和 final_paper.docx。
+不要先跑 quickstart 脚本。请读取赛题和附件，生成模型路线，判断附件是原始数据还是结果模板，在 paper_output/code/ 中生成并运行当前赛题专用代码，产出真实图表、表格、指标和结论。证据门禁通过后，调用 paper-formal-writer 生成 paper_outline.json，再基于完整证据链全局撰写 final_paper_source.md，随后格式化 final_paper.docx 并运行格式门禁。
 写作时可以引用 paper-micro-unit-generator 中保留的微单元提示词资产，但不要机械拼接，要按当前题目的模型、结果和评分点整体成文。
 ```
 
@@ -86,6 +88,24 @@ to_be_filled
 template
 draft
 ```
+
+## 正式写作与格式门禁
+
+证据门禁通过后进入 `paper-formal-writer`：
+
+```bash
+python skills/paper-formal-writer/scripts/build_paper_outline.py
+python skills/paper-formal-writer/scripts/format_formal_docx.py
+python skills/paper-formal-writer/scripts/check_paper_format.py
+```
+
+正式源稿写入：
+
+```text
+paper_output/final_paper_source.md
+```
+
+格式门禁要求标题采用 `1 / 1.1 / 1.1.1`，正文目标 `18000-25000` 中文字，每问必须有建模、公式、算法、结果、图表解释和检验。格式门禁未通过时，当前 Word 不能称为最终比赛稿。
 
 ## Quickstart 的定位
 
