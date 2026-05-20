@@ -29,13 +29,14 @@ MathModel Skill 是一套面向数学建模比赛的完整 skill 工作流，把
 
 根据你使用的平台，只复制对应包即可：
 
-| 平台 | 复制来源 | 复制到你的项目 | 原生入口 |
-|---|---|---|---|
-| Trae | `packages/trae/.trae/skills/` | `.trae/skills/` | `.trae/skills/*/SKILL.md` |
-| Claude Code | `packages/claude/.claude/skills/` + `packages/claude/CLAUDE.md` | `.claude/skills/` + `CLAUDE.md` | `.claude/skills/*/SKILL.md` |
-| Codex | `packages/codex/skills/` + `packages/codex/AGENTS.md` | `skills/` + `AGENTS.md` | `skills/*/SKILL.md` |
+| 平台 | 推荐下载包 | 源码复制来源 | 复制到你的项目 | 原生入口 |
+|---|---|---|---|---|
+| Trae | `dist/MathModel-Skill-Trae.zip` | `packages/trae/.trae/skills/` | `.trae/skills/` | `.trae/skills/*/SKILL.md` |
+| Claude Code | `dist/MathModel-Skill-Claude-Code.zip` | `packages/claude/.claude/skills/` + `packages/claude/CLAUDE.md` | `.claude/skills/` + `CLAUDE.md` | `.claude/skills/*/SKILL.md` |
+| Codex | `dist/MathModel-Skill-Codex.zip` | `packages/codex/skills/` + `packages/codex/AGENTS.md` | `skills/` + `AGENTS.md` | `skills/*/SKILL.md` |
 
 详细安装步骤见 [Agent 安装指南](docs/agent-install-guide.md)。
+可复制的首次使用提示词见 [Starter Prompts](docs/starter-prompts.md)。
 
 ## 不知道从哪个 Skill 开始？
 
@@ -68,6 +69,7 @@ MathModel-Skill/
 ├── README.md
 ├── assets/                       # 项目 logo 等展示资源
 ├── docs/                         # 安装与使用文档
+├── dist/                         # 三端可直接下载的 zip 包
 ├── examples/                     # 可直接跑通的 quickstart 示例
 ├── packages/                     # 三端原生 skill 分发包
 │   ├── trae/                     # Trae 原生包，也是当前 canonical source
@@ -91,7 +93,17 @@ pip install -r requirements.txt
 
 如果你只复制了某个平台包，也可以从本仓库复制 `requirements.txt` 到你的项目中。
 
-### 2. 复制对应平台包
+### 2. 下载或复制对应平台包
+
+最简单方式是下载 `dist/` 中对应平台的 zip，解压到你的数学建模项目根目录：
+
+```text
+Trae        -> dist/MathModel-Skill-Trae.zip
+Claude Code -> dist/MathModel-Skill-Claude-Code.zip
+Codex       -> dist/MathModel-Skill-Codex.zip
+```
+
+也可以从源码目录手动复制：
 
 Trae 用户：
 
@@ -133,6 +145,8 @@ crawled_data/       # 可选，放外部补充数据
 ```
 
 Agent 应先读取 `paper-workflow-orchestrator/SKILL.md`，再按 skill 里定义的流程调用其他 skill。`run_all.py` 只是这个总编排 skill 附带的可执行辅助脚本，用来把已确定的流程顺序稳定串起来。
+
+如果想写得更明确，可以复制 [Starter Prompts](docs/starter-prompts.md) 里的完整流程提示词。
 
 ### 5. 可选：手动验证安装
 
@@ -297,6 +311,24 @@ python .trae/skills/paper-micro-unit-generator/scripts/merge.py
 ```
 
 Claude Code 把 `.trae/skills/` 换成 `.claude/skills/`；Codex 把 `.trae/skills/` 换成 `skills/`。
+
+## 可选：重新打包
+
+维护者更新 skill 后，可以重新生成三端发布包：
+
+```bash
+python scripts/build_release_packages.py --clean
+```
+
+生成结果：
+
+```text
+dist/MathModel-Skill-Trae.zip
+dist/MathModel-Skill-Claude-Code.zip
+dist/MathModel-Skill-Codex.zip
+```
+
+打包脚本会排除 `__pycache__/`、`*.pyc`、`problem_files/`、`crawled_data/`、`paper_output/` 和 `data_requirements.json`，确保 zip 里只包含可分发的 skill 包、入口说明和依赖文件。
 
 ## 一句话总结
 
