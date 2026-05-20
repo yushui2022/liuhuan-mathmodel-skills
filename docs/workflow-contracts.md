@@ -89,4 +89,6 @@ paper_output/final_paper.docx
 
 `paper_figure_templates.py` 提供论文级图表代码样板，`generate_paper_figures_from_plan.py` 可以先按计划生成一版草稿图并更新 `figure_index.json`。这些草稿图用于帮助 Agent 对齐图表格式和路径，正式论文仍应接入当前赛题真实模型输出。
 
-`paper_output/results/` 与 `paper_output/tables/` 是结果证据层。第一版脚本会先生成可追溯的结果、指标、结论和表格骨架；真实赛题中，Agent 仍应根据当前数据和模型路线生成专用建模代码，再把真实数值写回这些契约。
+`paper_output/code/modeling/` 是当前赛题建模代码工作区。`model-code-and-result-generator` 会根据任务类型生成 `run_modeling.py`、`result_contract_io.py` 和 `q*_model.py` 脚手架；这些文件是 Agent 二次修改的起点，不是最终建模答案。
+
+`paper_output/results/` 与 `paper_output/tables/` 是结果证据层。脚本会先生成可追溯的结果、指标、结论和表格骨架；运行并修改 `q*_model.py` 后，应把真实或已复核的数值写回这些契约，再重新运行 QA，让 `tasks.json` 读取最新结果证据。

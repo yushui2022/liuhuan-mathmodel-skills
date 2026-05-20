@@ -245,6 +245,8 @@ def conclusion_text(conclusions: object) -> str:
 
 def evidence_note(task: dict) -> str:
     status = str(task.get("evidence_status") or "").strip()
+    if status == "scaffold_result_needs_review":
+        return "当前结果来自建模代码脚手架，正式提交前需要结合真实赛题字段、目标函数、约束条件和评价指标复核。"
     if status == "needs_real_modeling":
         return "当前结果证据仍是契约骨架，正式提交前必须用当前赛题专用建模代码补齐真实数值。"
     if status == "missing":

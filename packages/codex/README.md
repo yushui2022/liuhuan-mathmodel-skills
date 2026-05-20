@@ -72,6 +72,11 @@ paper_output/final_paper.md
 paper_output/code/data_processing/
 paper_output/code/visualization/
 paper_output/code/modeling/
+paper_output/code/modeling/run_modeling.py
+paper_output/code/modeling/result_contract_io.py
+paper_output/code/modeling/q1_model.py
+paper_output/code/modeling/q2_model.py
+paper_output/code/modeling/q3_model.py
 paper_output/code/qa/
 paper_output/plan/model_route.json
 paper_output/plan/data_plan.json
@@ -87,11 +92,11 @@ paper_output/data_cleaned/
 paper_output/figures/
 ```
 
-当前赛题专用代码统一放在 `paper_output/code/`：数据处理代码放 `data_processing/`，绘图代码放 `visualization/`，q1/q2/q3 建模代码放 `modeling/`，检查脚本放 `qa/`。`skills/*/scripts/` 只作为可复用模板和代码级提示词，不写入当前赛题产物。
+当前赛题专用代码统一放在 `paper_output/code/`：数据处理代码放 `data_processing/`，绘图代码放 `visualization/`，q1/q2/q3 建模脚手架和二次修改代码放 `modeling/`，检查脚本放 `qa/`。`skills/*/scripts/` 只作为可复用模板和代码级提示词，不写入当前赛题产物。
 
 ## 说明
 
 - Codex 包基于 Trae 原版 skill 包适配。
 - 适配只改变平台路径和平台称呼，不改变工作流设计。
 - 每个 skill 都是完整文件夹，保留脚本和参考材料。
-- `model-code-and-result-generator` 只生成结果证据契约和代码样板，不承诺自动解决所有赛题建模。
+- `model-code-and-result-generator` 会生成结果证据契约和 `q*_model.py` 建模代码脚手架，不承诺自动解决所有赛题建模。

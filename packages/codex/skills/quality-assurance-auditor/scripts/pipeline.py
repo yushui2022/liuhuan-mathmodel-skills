@@ -201,9 +201,11 @@ def compact_conclusions(items: list[dict]) -> list[dict]:
 def evidence_status_for(result_item: dict | None, metric_items: list[dict], table_items: list[dict], conclusion_items: list[dict]) -> str:
     if not result_item and not metric_items and not table_items and not conclusion_items:
         return "missing"
+    result_marker = str((result_item or {}).get("evidence_status") or (result_item or {}).get("status") or "")
+    if result_marker == "scaffold_result_needs_review":
+        return "scaffold_result_needs_review"
     markers = [
-        str((result_item or {}).get("evidence_status") or ""),
-        str((result_item or {}).get("status") or ""),
+        result_marker,
         *[str(item.get("status") or item.get("evidence_status") or "") for item in metric_items],
         *[str(item.get("status") or item.get("evidence_status") or "") for item in table_items],
         *[str(item.get("status") or item.get("evidence_status") or "") for item in conclusion_items],
@@ -242,6 +244,35 @@ def manifest_has_result_evidence(tasks: list[dict]) -> bool:
         return False
     required = {"result_summary", "key_metrics", "tables", "conclusions", "evidence_status"}
     return all(required.issubset(set(task.keys())) for task in question_tasks)
+
+
+def load_result_evidence() -> dict[str, dict]:
+    model_results = load_json_contract(MODEL_RESULTS_FILE)
+    metrics = load_json_contract(METRICS_FILE)
+    conclusions = load_json_contract(CONCLUSIONS_FILE)
+    table_index = load_json_contract(TABLE_INDEX_FILE)
+    return build_result_evidence(model_results, metrics, conclusions, table_index)
+
+
+def refresh_existing_task_evidence(tasks: list[dict], result_evidence: dict[str, dict]) -> bool:
+    changed = False
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+        qid = str(task.get("question_id") or "").strip()
+        if not qid:
+            continue
+        evidence = result_evidence.get(qid)
+        if not evidence:
+            continue
+        for key in ("result_summary", "key_metrics", "tables", "conclusions", "evidence_status"):
+            if task.get(key) != evidence.get(key):
+                task[key] = evidence.get(key)
+                changed = True
+    if changed:
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        TASKS_FILE.write_text(json.dumps(tasks, ensure_ascii=False, indent=2), encoding="utf-8")
+    return changed
 
 
 def check_evidence_contracts() -> list[str]:
@@ -357,6 +388,8 @@ def check_evidence_contracts() -> list[str]:
                 warnings.append(f"{qid} 缺少模型结果/指标/结论契约，真实建模结果待补")
             elif evidence.get("evidence_status") == "needs_real_modeling":
                 warnings.append(f"{qid} 的结果证据仍是草稿骨架，需要结合真实建模代码补齐")
+            elif evidence.get("evidence_status") == "scaffold_result_needs_review":
+                warnings.append(f"{qid} 的结果来自建模脚手架，正式提交前需要按真实赛题复核")
     return warnings
 
 
@@ -606,19 +639,18 @@ def generate_route_manifest(
 
 def generate_task_manifest(target_words: int = 300, force: bool = False) -> tuple[list[dict], bool]:
     existing = load_existing_tasks()
-    if existing is not None and not force:
-        if not MODEL_ROUTE_FILE.exists() or manifest_has_result_evidence(existing):
-            return existing, False
-
     model_route = load_model_route()
+    if existing is not None and not force:
+        if model_route is None:
+            return existing, False
+        if manifest_has_result_evidence(existing):
+            changed = refresh_existing_task_evidence(existing, load_result_evidence())
+            return existing, changed
+
     if model_route is not None:
         rubric_alignment = load_rubric_alignment()
         visualization_plan = load_json_contract(VISUALIZATION_PLAN_FILE)
-        model_results = load_json_contract(MODEL_RESULTS_FILE)
-        metrics = load_json_contract(METRICS_FILE)
-        conclusions = load_json_contract(CONCLUSIONS_FILE)
-        table_index = load_json_contract(TABLE_INDEX_FILE)
-        result_evidence = build_result_evidence(model_results, metrics, conclusions, table_index)
+        result_evidence = load_result_evidence()
         tasks = generate_route_manifest(model_route, rubric_alignment, target_words, visualization_plan, result_evidence)
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         TASKS_FILE.write_text(json.dumps(tasks, ensure_ascii=False, indent=2), encoding="utf-8")

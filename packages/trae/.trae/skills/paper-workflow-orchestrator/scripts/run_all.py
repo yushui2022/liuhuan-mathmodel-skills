@@ -4,21 +4,39 @@ import sys
 from pathlib import Path
 
 
+def configure_utf8_stdio() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
+
+def run_step(args, **kwargs):
+    env = os.environ.copy()
+    env.setdefault("PYTHONIOENCODING", "utf-8")
+    env.setdefault("PYTHONUTF8", "1")
+    if "env" in kwargs:
+        env.update(kwargs.pop("env"))
+    return subprocess.run(args, env=env, **kwargs)
+
+
 def main() -> int:
+    configure_utf8_stdio()
     root = Path(__file__).resolve().parents[4]
     os.chdir(root)
 
     print("=== Step-0 输出目录规划 ===")
     layout_script = root / ".trae/skills/paper-workflow-orchestrator/scripts/prepare_output_layout.py"
     if layout_script.exists():
-        subprocess.run([sys.executable, str(layout_script)], check=False)
+        run_step([sys.executable, str(layout_script)], check=False)
     else:
         print("   未检测到输出目录规划脚本，跳过。")
 
     print("=== Step-1 赛题结构化分析 ===")
     analyzer_script = root / ".trae/skills/problem-doc-model-selector/scripts/analyze_problem.py"
     if analyzer_script.exists():
-        r_analyze = subprocess.run(
+        r_analyze = run_step(
             [sys.executable, str(analyzer_script)],
             check=False,
         )
@@ -30,7 +48,7 @@ def main() -> int:
     print("=== Step-2 模型路线与评分闭环 ===")
     model_route_script = root / ".trae/skills/modeling-paper-rubric-and-model-selector/scripts/build_model_route.py"
     if model_route_script.exists():
-        r_route = subprocess.run(
+        r_route = run_step(
             [sys.executable, str(model_route_script)],
             check=False,
         )
@@ -43,7 +61,7 @@ def main() -> int:
     harvester_script = root / ".trae/skills/authoritative-data-harvester/scripts/run.py"
     if harvester_script.exists():
         print("   正在检查外部数据源...")
-        subprocess.run(
+        run_step(
             [sys.executable, str(harvester_script)],
             check=False,
         )
@@ -51,7 +69,7 @@ def main() -> int:
         print("   未检测到外部数据获取脚本，跳过。")
 
     print("=== Step-4 数据与图表计划、清洗与可视化 ===")
-    r_clean = subprocess.run(
+    r_clean = run_step(
         [sys.executable, ".trae/skills/data-cleaning-and-visualization/scripts/run_pipeline.py"],
         check=False,
     )
@@ -61,7 +79,7 @@ def main() -> int:
     print("=== Step-5 结果计算与出图（可选自定义） ===")
     calc_script = Path("step2_calc_results.py")
     if calc_script.exists():
-        r_calc = subprocess.run(
+        r_calc = run_step(
             [sys.executable, "step2_calc_results.py"],
             check=False,
         )
@@ -73,7 +91,7 @@ def main() -> int:
     print("=== Step-6 建模代码与结果证据生成 ===")
     result_contract_script = root / ".trae/skills/model-code-and-result-generator/scripts/build_result_contracts.py"
     if result_contract_script.exists():
-        r_result = subprocess.run(
+        r_result = run_step(
             [sys.executable, str(result_contract_script)],
             check=False,
         )
@@ -83,7 +101,7 @@ def main() -> int:
         print("   未检测到结果证据生成脚本，跳过。")
 
     print("=== Step-7 质量审计与任务清单 ===")
-    r0 = subprocess.run(
+    r0 = run_step(
         [sys.executable, ".trae/skills/quality-assurance-auditor/scripts/pipeline.py"],
         check=False,
     )
@@ -91,7 +109,7 @@ def main() -> int:
         return r0.returncode
 
     print("=== Step-8 微单元离线生成 ===")
-    r1 = subprocess.run(
+    r1 = run_step(
         [sys.executable, ".trae/skills/paper-micro-unit-generator/scripts/generate_all_offline.py"],
         check=False,
     )
@@ -99,7 +117,7 @@ def main() -> int:
         return r1.returncode
 
     print("=== Step-9 合并 ===")
-    r2 = subprocess.run(
+    r2 = run_step(
         [sys.executable, ".trae/skills/paper-micro-unit-generator/scripts/merge.py"],
         check=False,
     )
@@ -121,16 +139,16 @@ def main() -> int:
             print(f"⚠️ 移动文件失败: {e}")
     else:
         try:
-            subprocess.run(["pandoc", "--version"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            run_step(["pandoc", "--version"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             md_path = root / "paper_output/final_paper.md"
             if md_path.exists():
                 print("ℹ️ 未检测到直接生成的 Word，尝试使用 Pandoc 转换...")
-                subprocess.run(
+                run_step(
                     ["pandoc", str(md_path), "-o", str(final_docx), "--reference-doc=reference.docx"],
                     check=False,
                 )
                 if not final_docx.exists():
-                    subprocess.run(
+                    run_step(
                         ["pandoc", str(md_path), "-o", str(final_docx)],
                         check=False,
                     )

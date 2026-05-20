@@ -60,12 +60,12 @@ paper_output/code/
 │   ├── README.md
 │   └── ...                        # Agent 根据当前图表需求生成或修改的绘图代码
 ├── modeling/
-│   ├── run_modeling.py            # 建议的建模统一入口，后续生成
-│   ├── result_contract_io.py      # 写回 results/tables 契约的 helper，后续生成
-│   ├── q1_model.py                # 问题一专用建模代码，后续生成
-│   ├── q2_model.py                # 问题二专用建模代码，后续生成
-│   ├── q3_model.py                # 问题三专用建模代码，后续生成
-│   └── README.md                  # 当前脚本会先生成工作区说明
+│   ├── run_modeling.py            # model-code-and-result-generator 生成的统一入口
+│   ├── result_contract_io.py      # 写回 results/tables 契约的 helper
+│   ├── q1_model.py                # 问题一建模代码脚手架，Agent 二次修改
+│   ├── q2_model.py                # 问题二建模代码脚手架，Agent 二次修改
+│   ├── q3_model.py                # 问题三建模代码脚手架，Agent 二次修改
+│   └── README.md                  # 当前赛题建模代码工作区说明
 └── qa/
     ├── README.md
     └── ...                        # 可选，当前赛题专用检查脚本
@@ -132,7 +132,7 @@ paper_output/ref_check.md
 | `paper_output/plan/` | `modeling-paper-rubric-and-model-selector` / `data-cleaning-and-visualization` | 模型路线、评分、数据和图表计划 |
 | `paper_output/code/data_processing/` | Agent + `data-cleaning-and-visualization` | 当前赛题数据处理代码 |
 | `paper_output/code/visualization/` | Agent + `data-cleaning-and-visualization` | 当前赛题绘图代码 |
-| `paper_output/code/modeling/` | Agent + `model-code-and-result-generator` | 当前赛题建模代码 |
+| `paper_output/code/modeling/` | `model-code-and-result-generator` + Agent | 当前赛题 q1/q2/q3 建模脚手架与二次修改代码 |
 | `paper_output/data_cleaned/` | `data-cleaning-and-visualization` | 清洗后的输入数据 |
 | `paper_output/figures/` | `data-cleaning-and-visualization` / Agent | 论文图片 |
 | `paper_output/tables/` | `model-code-and-result-generator` / Agent | 论文表格 |

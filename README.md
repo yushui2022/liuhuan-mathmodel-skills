@@ -268,7 +268,7 @@ problem_analysis.json -> model_route.json / rubric_alignment.json -> data_plan.j
 
 - `authoritative-data-harvester`：定位权威公开数据源，优先 API 或官方批量下载。
 - `data-cleaning-and-visualization`：提供数据清洗、图表生成和论文级可视化代码样板，并生成数据/图表计划，帮助 Agent 按更稳定的格式产出论文可用图表。
-- `model-code-and-result-generator`：根据模型路线、数据计划和清洗数据生成结果、指标、结论和表格证据契约。它不是万能自动建模系统，真实赛题仍应由 Agent 基于当前数据二次生成或修改专用建模代码。
+- `model-code-and-result-generator`：根据模型路线、数据计划和清洗数据生成结果、指标、结论和表格证据契约，并在 `paper_output/code/modeling/` 生成 `q1_model.py`、`q2_model.py`、`q3_model.py` 等建模代码脚手架。它不是万能自动建模系统，真实赛题仍应由 Agent 基于当前数据二次修改专用建模代码。
 
 ### 论文生成与质量审计
 
@@ -327,6 +327,9 @@ python .trae/skills/data-cleaning-and-visualization/scripts/run_pipeline.py
 
 # 结果证据契约
 python .trae/skills/model-code-and-result-generator/scripts/build_result_contracts.py
+
+# 运行并复核 q1/q2/q3 建模代码脚手架
+python paper_output/code/modeling/run_modeling.py
 
 # QA 与任务清单
 python .trae/skills/quality-assurance-auditor/scripts/pipeline.py

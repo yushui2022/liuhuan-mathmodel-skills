@@ -5,17 +5,17 @@ from typing import Any
 
 def normalize_task_type(task_type: str) -> str:
     text = str(task_type or "").lower()
-    if any(key in text for key in ("预测", "回归", "forecast", "regression")):
+    if any(key in text for key in ("预测", "回归", "forecast", "regression", "时间序列")):
         return "forecasting"
-    if any(key in text for key in ("优化", "规划", "调度", "选址", "路径")):
+    if any(key in text for key in ("优化", "规划", "调度", "选址", "路径", "决策")):
         return "optimization"
-    if any(key in text for key in ("评价", "排序", "权重", "综合", "topsis", "ahp")):
+    if any(key in text for key in ("评价", "排序", "权重", "综合", "topsis", "ahp", "熵权")):
         return "evaluation"
-    if any(key in text for key in ("分类", "识别", "判别")):
+    if any(key in text for key in ("分类", "识别", "判别", "classification")):
         return "classification"
-    if any(key in text for key in ("聚类", "分群")):
+    if any(key in text for key in ("聚类", "分群", "clustering")):
         return "clustering"
-    if any(key in text for key in ("仿真", "机理", "动力学", "微分")):
+    if any(key in text for key in ("仿真", "机理", "动力学", "微分", "simulation")):
         return "simulation"
     return "general"
 
@@ -86,4 +86,3 @@ def suggested_table_titles(task_type: str) -> list[str]:
         "simulation": ["参数估计表", "情景仿真结果表", "敏感性分析表"],
         "general": ["核心结果表", "模型对比表", "稳健性检查表"],
     }[kind]
-

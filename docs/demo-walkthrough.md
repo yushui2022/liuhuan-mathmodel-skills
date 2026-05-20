@@ -92,6 +92,11 @@ paper_output/final_paper.md
 paper_output/OUTPUT_LAYOUT.md
 paper_output/code/README.md
 paper_output/code/modeling/README.md
+paper_output/code/modeling/run_modeling.py
+paper_output/code/modeling/result_contract_io.py
+paper_output/code/modeling/q1_model.py
+paper_output/code/modeling/q2_model.py
+paper_output/code/modeling/q3_model.py
 paper_output/tasks.json
 paper_output/ref_check.md
 paper_output/figure_index.json

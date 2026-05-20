@@ -1,51 +1,65 @@
 ---
 name: "model-code-and-result-generator"
-description: "根据模型路线、数据计划和清洗数据生成建模结果证据契约。Invoke when 需要把模型输出、评价指标、结论和论文表格沉淀为 paper_output/results/ 与 paper_output/tables/，供 QA 和正文生成读取。"
+description: "根据 model_route.json、数据计划和清洗数据，为数学建模论文生成结果证据契约和 q1/q2/q3 建模代码脚手架。Invoke when 需要把模型输出、评价指标、结构化结论、论文表格和当前赛题专用建模代码沉淀到 paper_output/results/、paper_output/tables/ 和 paper_output/code/modeling/，供 QA 与正文生成读取。"
 ---
 
 # 建模代码与结果证据生成器
 
-## 执行契约
-- 上游输入：优先读取 `paper_output/plan/model_route.json`、`data_plan.json`、`visualization_plan.json`，并扫描 `paper_output/data_cleaned/` 中的清洗数据。
-- 必须输出：`paper_output/results/model_results.json`、`metrics.json`、`conclusions.json`、`paper_output/tables/table_index.json`、可复用的 `paper_output/tables/*.csv`，并准备 `paper_output/code/modeling/README.md`。
-- 下游交接：`quality-assurance-auditor` 读取结果和表格证据后写入 `tasks.json`；`paper-micro-unit-generator` 通过任务清单引用结果、指标、表格和结论。
-- 推荐下一步：结果证据生成后进入 `quality-assurance-auditor`；完整论文目标应回到 `paper-workflow-orchestrator` 判断后续阶段。
-- 失败回退：若没有真实建模代码或清洗数据，仍生成结果契约骨架，并明确标记“真实数值需结合当前赛题专用代码补齐”。
-
 ## 目标
 
-本 skill 不是万能自动建模系统。它的作用是给 Agent 一个稳定的结果证据层，避免正文只根据模型路线空写。
+本 skill 不是万能自动建模系统。它的作用是给 Agent 一个稳定的“结果证据层”和可运行的赛题专用建模代码起点，避免正文只根据模型路线空写，也避免 Agent 面对数据时无头乱转。
 
-真实赛题中，Agent 应根据 `model_route.json`、`data_plan.json`、清洗数据和现有代码样板，生成或修改当前赛题专用建模代码，然后把输出沉淀到本 skill 规定的契约中。当前赛题专用建模代码统一放在 `paper_output/code/modeling/`，不要写回 skill 包的 `scripts/`。
+真实赛题中，Agent 必须根据 `model_route.json`、数据字段、题目约束和评分要求二次修改生成的 `q*_model.py`。生成代码固定放在 `paper_output/code/modeling/`，不要写回 skill 包的 `scripts/`。
 
-## 脚本清单
+## 执行契约
+
+- 上游输入：优先读取 `paper_output/plan/model_route.json`、`data_plan.json`、`visualization_plan.json`，并扫描 `paper_output/data_cleaned/`。
+- 必须输出：`paper_output/results/model_results.json`、`metrics.json`、`conclusions.json`、`paper_output/tables/table_index.json`、`paper_output/tables/*.csv`。
+- 建模代码输出：`paper_output/code/modeling/result_contract_io.py`、`run_modeling.py`、`q1_model.py`、`q2_model.py`、`q3_model.py` 或与 `question_id` 对应的 `q*_model.py`。
+- 下游交接：`quality-assurance-auditor` 读取结果与表格证据后写入 `tasks.json`；`paper-micro-unit-generator` 通过任务清单引用结果、指标、表格和结论。
+- 失败回退：如果没有清洗数据或真实建模代码，仍生成契约骨架，并用 `needs_real_modeling` 标记，不伪装成最终比赛结果。
+
+## 脚本
 
 - `scripts/build_result_contracts.py`
-  - 何时用：已有模型路线和数据计划，需要先生成结果证据契约骨架，或根据清洗数据生成基础描述统计和候选结果表。
-  - 做什么：扫描 `model_route.json` 的每个 `question_id`，生成 `model_results.json`、`metrics.json`、`conclusions.json`、`table_index.json`、若干 `tables/*.csv`，并写入 `paper_output/code/modeling/README.md` 说明 q1/q2/q3 建模脚本的放置位置。
-
+  - 何时用：已有模型路线，需要生成结果契约、表格索引和当前赛题的 q1/q2/q3 建模代码脚手架。
+  - 做什么：扫描 `model_route.json` 的每个 `question_id`，生成结果契约骨架、基础字段画像表、`paper_output/code/modeling/README.md`，并生成可运行的 `q*_model.py`。
+  - 覆盖规则：生成文件带有 managed marker；如果 Agent 已经手工改写并去掉 marker，本脚本会保留用户文件，不覆盖。
 - `scripts/result_contract_templates.py`
-  - 何时用：Agent 需要了解不同任务类型应沉淀哪些指标、表格和结论字段时。
-  - 做什么：提供预测、优化、评价、分类、聚类、机理仿真等任务的结果契约模板。
+  - 何时用：需要了解不同任务类型应沉淀哪些指标、表格和结论字段。
+  - 做什么：提供预测、优化、评价、分类、聚类、仿真、通用建模的契约模板。
 
-## 结果契约
+## 任务类型分发
 
-输出目录固定为：
+- 预测/回归/时间序列 -> forecasting scaffold：生成目标列、特征列、预测值、残差、RMSE、MAE、MAPE。
+- 优化/规划/调度/选址/路径 -> optimization scaffold：生成代理目标函数、方案排序、约束满足率待补项。
+- 评价/排序/权重/TOPSIS/AHP/熵权 -> evaluation scaffold：生成指标归一化、综合得分、排序和权重敏感性待补项。
+- 分类/识别/判别 -> classification scaffold：生成代理分类标签、准确率/F1 待补项。
+- 聚类/分群 -> clustering scaffold：生成代理聚类标签、聚类数、簇内紧凑度。
+- 仿真/机理/动力学/微分 -> simulation scaffold：生成趋势代理、情景结果、拟合误差和敏感性参数。
+- 其他 -> general scaffold：生成数值字段统计摘要和通用结果表。
+
+## 输出位置
 
 ```text
 paper_output/
-├── code/
-│   └── modeling/
-│       └── README.md
-├── results/
-│   ├── model_results.json
-│   ├── metrics.json
-│   └── conclusions.json
-└── tables/
-    ├── table_index.json
-    ├── table_q1_result_skeleton.csv
-    ├── table_data_profile_*.csv
-    └── ...
+|-- code/
+|   `-- modeling/
+|       |-- run_modeling.py
+|       |-- result_contract_io.py
+|       |-- q1_model.py
+|       |-- q2_model.py
+|       |-- q3_model.py
+|       `-- README.md
+|-- results/
+|   |-- model_results.json
+|   |-- metrics.json
+|   `-- conclusions.json
+`-- tables/
+    |-- table_index.json
+    |-- table_q1_result_skeleton.csv
+    |-- table_q1_forecasting_scaffold.csv
+    `-- ...
 ```
 
 统一规则：
@@ -53,24 +67,8 @@ paper_output/
 - 所有路径使用相对路径。
 - 所有 JSON 包含 `schema_version`、`generated_by`、`generated_at`。
 - 每条结果、指标、结论和表格都应带 `question_id`。
-- 若当前只是骨架结果，必须用 `status` 或 `evidence_status` 标记，不能伪装成真实计算结果。
-- 表格进入正文前必须能在 `paper_output/tables/table_index.json` 中找到。
-
-## 建模代码位置
-
-当前赛题专用建模代码固定放在：
-
-```text
-paper_output/code/modeling/
-├── run_modeling.py          # 可选，统一运行 Q1/Q2/Q3
-├── result_contract_io.py    # 可选，统一写回 results/tables 契约
-├── q1_model.py              # 问题一专用建模代码
-├── q2_model.py              # 问题二专用建模代码
-├── q3_model.py              # 问题三专用建模代码
-└── README.md
-```
-
-第一版脚本只会生成结果契约骨架和建模代码工作区说明，不承诺自动生成完整真实建模代码。真实赛题中，Agent 应先读取本 skill 的模板和 `model_route.json`，再在 `paper_output/code/modeling/` 中生成或修改 q1/q2/q3 专用脚本，并把真实输出写回 `paper_output/results/` 与 `paper_output/tables/`。
+- 草稿或脚手架结果必须使用 `status` 或 `evidence_status` 标记。
+- 正文中引用的表格必须能在 `paper_output/tables/table_index.json` 找到。
 
 ## 使用方式
 
@@ -80,10 +78,17 @@ paper_output/code/modeling/
 python .claude/skills/model-code-and-result-generator/scripts/build_result_contracts.py
 ```
 
-平台路径不同时，按对应平台 skill 目录替换命令前缀即可。
+生成脚手架后，Agent 应按真实赛题执行：
+
+```bash
+python paper_output/code/modeling/run_modeling.py
+```
+
+然后重新运行 QA，让 `paper_output/tasks.json` 读取刷新后的 `model_results.json`、`metrics.json`、`conclusions.json` 和 `table_index.json`。
 
 ## 真实赛题使用原则
 
-- 不要把本 skill 生成的占位式指标直接当成最终比赛结果。
-- 需要正式建模时，先让 Agent 读取 `model_route.json` 和清洗数据，再参考本 skill 的脚本生成当前题目的专用建模代码，代码位置固定为 `paper_output/code/modeling/`。
-- 专用建模代码完成后，应覆盖或补全 `paper_output/results/` 与 `paper_output/tables/`，再进入 QA 和正文生成。
+- 不要把占位式指标或代理结果直接当成最终比赛结果。
+- 优先修改 `paper_output/code/modeling/q*_model.py`，不要修改 skill 包内的 `scripts/`。
+- 正式建模完成后，必须把真实输出写回 `paper_output/results/` 与 `paper_output/tables/`，再进入 QA 和正文生成。
+- 如果某一问没有真实结果，QA 应保留 warning，正文不得把该问写成已经完成精确计算。

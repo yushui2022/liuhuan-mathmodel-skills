@@ -69,6 +69,11 @@ paper_output/final_paper.md
 paper_output/code/data_processing/
 paper_output/code/visualization/
 paper_output/code/modeling/
+paper_output/code/modeling/run_modeling.py
+paper_output/code/modeling/result_contract_io.py
+paper_output/code/modeling/q1_model.py
+paper_output/code/modeling/q2_model.py
+paper_output/code/modeling/q3_model.py
 paper_output/code/qa/
 paper_output/plan/model_route.json
 paper_output/plan/data_plan.json
@@ -84,11 +89,11 @@ paper_output/data_cleaned/
 paper_output/figures/
 ```
 
-当前赛题专用代码统一放在 `paper_output/code/`：数据处理代码放 `data_processing/`，绘图代码放 `visualization/`，q1/q2/q3 建模代码放 `modeling/`，检查脚本放 `qa/`。`.trae/skills/*/scripts/` 只作为可复用模板和代码级提示词，不写入当前赛题产物。
+当前赛题专用代码统一放在 `paper_output/code/`：数据处理代码放 `data_processing/`，绘图代码放 `visualization/`，q1/q2/q3 建模脚手架和二次修改代码放 `modeling/`，检查脚本放 `qa/`。`.trae/skills/*/scripts/` 只作为可复用模板和代码级提示词，不写入当前赛题产物。
 
 ## 说明
 
 - Trae 包是当前 canonical skill source 的原版复制。
 - 本包按完整 skill 文件夹分发，包含 `SKILL.md`、`scripts/`、`references/` 和 memory 文件。
-- `model-code-and-result-generator` 是结果证据辅助 skill，用于生成结果、指标、结论和表格契约；它不是万能自动建模系统。
+- `model-code-and-result-generator` 是结果证据辅助 skill，用于生成结果、指标、结论、表格契约和 `q*_model.py` 建模代码脚手架；它不是万能自动建模系统。
 - `context-memory-keeper` 是辅助记忆 skill，不计入 7 个论文生产核心 skill。

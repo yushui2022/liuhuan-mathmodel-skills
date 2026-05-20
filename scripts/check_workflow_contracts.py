@@ -18,6 +18,14 @@ TABLE_INDEX_FILE = BASE_DIR / "paper_output" / "tables" / "table_index.json"
 TASKS_FILE = BASE_DIR / "paper_output" / "tasks.json"
 
 
+def configure_utf8_stdio() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
+
 def load_json(path: Path) -> Any:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -155,6 +163,7 @@ def check_optional_result_contracts(failures: list[str], route_qids: set[str], t
 
 
 def main() -> int:
+    configure_utf8_stdio()
     failures: list[str] = []
     for path in (PROBLEM_ANALYSIS_FILE, MODEL_ROUTE_FILE, RUBRIC_ALIGNMENT_FILE, TASKS_FILE):
         if not path.exists():
