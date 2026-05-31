@@ -104,6 +104,39 @@ def status_of(item: dict[str, Any] | None) -> str:
     return str(item.get("evidence_status") or item.get("status") or "").strip()
 
 
+def resolve_artifact(path_text: object) -> Path:
+    text = str(path_text or "").strip().strip("<>")
+    path = Path(text)
+    if path.is_absolute():
+        return path
+    return BASE_DIR / path
+
+
+def provenance_failures(item: dict[str, Any]) -> list[str]:
+    provenance = item.get("execution_provenance")
+    if not isinstance(provenance, dict):
+        return ["缺少 execution_provenance，无法证明结果来自实际代码运行"]
+
+    failures: list[str] = []
+    source_code = resolve_artifact(provenance.get("source_code_path"))
+    if not provenance.get("source_code_path"):
+        failures.append("execution_provenance.source_code_path 为空")
+    elif not source_code.exists():
+        failures.append(f"source_code_path 不存在：{source_code}")
+
+    if provenance.get("run_exit_code") not in (0, "0"):
+        failures.append(f"run_exit_code 不是 0：{provenance.get('run_exit_code')}")
+
+    if not str(provenance.get("run_command") or "").strip():
+        failures.append("execution_provenance.run_command 为空")
+
+    for artifact in provenance.get("output_artifacts", []) or []:
+        artifact_path = resolve_artifact(artifact)
+        if not artifact_path.exists():
+            failures.append(f"输出产物不存在：{artifact}")
+    return failures
+
+
 def has_bad_status(items: list[dict[str, Any]]) -> bool:
     for item in items:
         status = status_of(item)
@@ -181,6 +214,9 @@ def evaluate() -> dict[str, Any]:
             q_failures.append("缺少 model_results.json 中的模型结果")
         elif status_of(result) in BAD_STATUSES:
             q_failures.append(f"模型结果状态仍不可作为正式证据：{status_of(result)}")
+        else:
+            for failure in provenance_failures(result):
+                q_failures.append(f"模型结果缺少真实运行来源：{failure}")
 
         if not q_metrics:
             q_failures.append("缺少 metrics.json 中的评价指标")

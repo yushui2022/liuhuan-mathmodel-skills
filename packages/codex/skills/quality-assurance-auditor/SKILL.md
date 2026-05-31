@@ -1,4 +1,4 @@
----
+﻿---
 name: "quality-assurance-auditor"
 description: "强制审计论文生成质量，防止模型偷换、逻辑断链、内容空洞。Invoke when 用户提出检查/审计/验收/确保/verify/QA，或合并前需要把关。"
 ---
@@ -92,7 +92,7 @@ description: "强制审计论文生成质量，防止模型偷换、逻辑断链
 
 当前 `scripts/pipeline.py` 是基础门禁脚本，负责初始化目录、检查 `problem_files/` 并生成 `paper_output/tasks.json`。
 
-`scripts/evidence_gate.py` 是正式成稿前证据门禁脚本，负责检查每个 `question_id` 是否具备真实模型结果、评价指标、图表或表格证据、结论回扣和任务追踪。它会输出 `paper_output/qa/evidence_gate_report.json` 与 `paper_output/qa/evidence_gate_report.md`。official 模式下未通过会返回非零退出码；quickstart 模式只给 warning。
+`scripts/evidence_gate.py` 是正式成稿前证据门禁脚本，负责检查每个 `question_id` 是否具备真实模型结果、评价指标、图表或表格证据、结论回扣和任务追踪。official 模式还会检查 `model_results.json` 中每个正式结果的 `execution_provenance`，确认 `source_code_path` 存在、`run_command` 非空、`run_exit_code=0` 且输出产物可追踪；没有真实代码运行来源的结果不得通过。它会输出 `paper_output/qa/evidence_gate_report.json` 与 `paper_output/qa/evidence_gate_report.md`。official 模式下未通过会返回非零退出码；quickstart 模式只给 warning。
 
 `paper-formal-writer/scripts/check_paper_format.py` 是正式成稿后的格式门禁脚本，负责检查 `final_paper_source.md` 是否达到 `18000-25000` 目标、是否有 `1 / 1.1 / 1.1.1` 三级标题、每问是否有建模/算法/结果/检验、图表是否被正文引用、参考文献和附录是否完整。它不替代 `evidence_gate.py`，而是在证据门禁通过后继续阻止低字数、低格式质量的 Word 被称为最终稿。
 

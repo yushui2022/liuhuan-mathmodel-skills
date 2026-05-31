@@ -1,4 +1,4 @@
----
+﻿---
 name: "model-code-and-result-generator"
 description: "根据 model_route.json、数据计划和清洗数据，为数学建模论文生成结果证据契约和 q1/q2/q3 建模代码脚手架。Invoke when 需要把模型输出、评价指标、结构化结论、论文表格和当前赛题专用建模代码沉淀到 paper_output/results/、paper_output/tables/ 和 paper_output/code/modeling/，供 QA 与正文生成读取。"
 ---
@@ -68,6 +68,7 @@ paper_output/
 - 所有 JSON 包含 `schema_version`、`generated_by`、`generated_at`。
 - 每条结果、指标、结论和表格都应带 `question_id`。
 - 草稿或脚手架结果必须使用 `status` 或 `evidence_status` 标记。
+- 正式结果必须带 `execution_provenance`，包含 `source_code_path`、`run_command`、`run_exit_code` 和 `output_artifacts`；official evidence gate 会拒绝没有真实代码运行来源的结果。
 - 正文中引用的表格必须能在 `paper_output/tables/table_index.json` 找到。
 
 ## 使用方式
@@ -90,5 +91,5 @@ python paper_output/code/modeling/run_modeling.py
 
 - 不要把占位式指标或代理结果直接当成最终比赛结果。
 - 优先修改 `paper_output/code/modeling/q*_model.py`，不要修改 skill 包内的 `scripts/`。
-- 正式建模完成后，必须把真实输出写回 `paper_output/results/` 与 `paper_output/tables/`，再进入 QA 和正文生成。
+- 正式建模完成后，必须由建模代码实际运行并把真实输出写回 `paper_output/results/` 与 `paper_output/tables/`；不要手写 `model_results.json` 冒充运行结果。
 - 如果某一问没有真实结果，QA 应保留 warning，正文不得把该问写成已经完成精确计算。

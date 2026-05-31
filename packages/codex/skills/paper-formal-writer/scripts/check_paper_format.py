@@ -159,6 +159,46 @@ def check_docx_structure(path: Path) -> dict[str, Any]:
         return {"exists": True, "error": str(exc)}
 
 
+def markdown_heading_count(text: str) -> int:
+    return len(re.findall(r"(^|\n)\s*#{1,6}\s+\S+", text))
+
+
+def visual_qa_failures(
+    docx_structure: dict[str, Any],
+    source_heading_count: int,
+    figure_count: int,
+    table_count: int,
+) -> tuple[list[str], list[str]]:
+    failures: list[str] = []
+    warnings: list[str] = []
+    if not docx_structure.get("exists") or docx_structure.get("error"):
+        return failures, warnings
+
+    paragraph_count = int(docx_structure.get("paragraph_count") or 0)
+    heading_count = int(docx_structure.get("heading_count") or 0)
+    docx_table_count = int(docx_structure.get("table_count") or 0)
+    image_count = int(docx_structure.get("image_count") or 0)
+
+    if paragraph_count < 10:
+        failures.append(f"Word 段落数量异常偏少：{paragraph_count} < 10")
+    if source_heading_count > 0 and heading_count == 0:
+        failures.append("Word 中没有可识别标题样式，标题结构可能未正确写入。")
+    elif source_heading_count > 0 and heading_count < max(1, source_heading_count // 2):
+        warnings.append(f"Word 标题数量明显少于 Markdown 标题：{heading_count} < {source_heading_count}")
+
+    if figure_count > 0 and image_count == 0:
+        failures.append("figure_index.json 有图片计划，但 Word 中没有图片。")
+    elif image_count < figure_count:
+        warnings.append(f"Word 图片数量少于 figure_index.json：{image_count} < {figure_count}")
+
+    if table_count > 0 and docx_table_count == 0:
+        failures.append("table_index.json 有表格计划，但 Word 中没有表格。")
+    elif docx_table_count < table_count:
+        warnings.append(f"Word 表格数量少于 table_index.json：{docx_table_count} < {table_count}")
+
+    return failures, warnings
+
+
 def evaluate() -> dict[str, Any]:
     source = source_path()
     outline = load_json(OUTLINE_FILE)
@@ -242,6 +282,11 @@ def evaluate() -> dict[str, Any]:
     elif docx_structure.get("error"):
         failures.append(f"Word 文件无法读取：{docx_structure['error']}")
 
+    source_heading_count = markdown_heading_count(text)
+    visual_failures, visual_warnings = visual_qa_failures(docx_structure, source_heading_count, len(figures), len(tables))
+    failures.extend(visual_failures)
+    warnings.extend(visual_warnings)
+
     return {
         "schema_version": "1.0",
         "generated_by": "paper-formal-writer/scripts/check_paper_format.py",
@@ -256,7 +301,13 @@ def evaluate() -> dict[str, Any]:
         "table_count": len(tables),
         "missing_figures": missing_figures,
         "missing_tables": missing_tables,
+        "source_heading_count": source_heading_count,
         "docx_structure": docx_structure,
+        "visual_qa": {
+            "status": "PASS" if not visual_failures else "FAIL",
+            "failures": visual_failures,
+            "warnings": visual_warnings,
+        },
         "failures": failures,
         "warnings": warnings,
     }
@@ -295,6 +346,14 @@ def write_reports(report: dict[str, Any]) -> None:
     lines.append("## DOCX Structure")
     for key, value in report["docx_structure"].items():
         lines.append(f"- {key}: `{value}`")
+    lines.append("")
+    lines.append("## Visual QA")
+    lines.append(f"- status: `{report['visual_qa']['status']}`")
+    lines.append(f"- source_heading_count: `{report['source_heading_count']}`")
+    for failure in report["visual_qa"]["failures"]:
+        lines.append(f"- failure: {failure}")
+    for warning in report["visual_qa"]["warnings"]:
+        lines.append(f"- warning: {warning}")
     REPORT_MD.write_text("\n".join(lines).strip() + "\n", encoding="utf-8")
 
 

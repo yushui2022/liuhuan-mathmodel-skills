@@ -1,4 +1,4 @@
----
+﻿---
 name: "paper-workflow-orchestrator"
 description: "MathModel Skill 总入口。触发词：数学建模、生成论文、分析赛题、CUMCM、MathorCup、华数杯、美赛、ICM、MathModel。任何数学建模任务先读本 skill 再路由子 skill。"
 ---
@@ -18,6 +18,16 @@ python .trae/skills/paper-workflow-orchestrator/scripts/preflight_check.py
 - 退出码非 0 或 `status != "PASS"` → **立刻停止生成任何内容**。把报告中的 `errors` 原文反问用户，等用户修复 `problem_files/` 后重新运行预检；
 - 不允许跳过预检；不允许"先凑合写一稿"；不允许凭印象判断附件状态；
 - 预检通过后，按下方阶段路由表逐步推进。
+
+## 状态门（每阶段开始前执行）
+
+正式流程进入 S1-S8 任一阶段前，必须用 `workflow_guard.py` 检查截至当前阶段的产物状态。例如进入数据阶段前检查到 S2：
+
+```bash
+python .trae/skills/paper-workflow-orchestrator/scripts/workflow_guard.py --step S2
+```
+
+脚本会写入 `paper_output/qa/workflow_guard_report.json`。若退出码非 0 或 `status != "PASS"`，必须按报告失败项补齐上一阶段产物，不得跳步。
 
 ## Quickstart 用途说明
 
@@ -107,6 +117,9 @@ python .trae/skills/paper-workflow-orchestrator/scripts/preflight_check.py
 - `scripts/run_all.py`：废弃迁移提示。
   - 何时用：旧命令误触时提示用户改用 `quickstart_run.py` 或正式 Agent-native workflow。
   - 做什么：只打印迁移提示，不执行生成流程。
+- `scripts/workflow_guard.py`：S0-S8 状态门检查器。
+  - 何时用：正式流程每个阶段开始前或用户要求检查当前进度时。
+  - 做什么：检查预检、审题、模型路线、数据读取报告、建模代码、结果证据、证据门禁、正式稿和格式门禁是否按顺序具备；失败时写入 `paper_output/qa/workflow_guard_report.json` 并返回非 0。
 
 ## 前置约定
 - 目录结构建议为：

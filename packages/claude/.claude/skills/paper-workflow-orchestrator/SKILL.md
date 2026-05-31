@@ -19,6 +19,16 @@ python .claude/skills/paper-workflow-orchestrator/scripts/preflight_check.py
 - 不允许跳过预检；不允许"先凑合写一稿"；不允许凭印象判断附件状态；
 - 预检通过后，按下方阶段路由表逐步推进。
 
+## 状态门（每阶段开始前执行）
+
+正式流程进入 S1-S8 任一阶段前，必须用 `workflow_guard.py` 检查截至当前阶段的产物状态。例如进入数据阶段前检查到 S2：
+
+```bash
+python .claude/skills/paper-workflow-orchestrator/scripts/workflow_guard.py --step S2
+```
+
+脚本会写入 `paper_output/qa/workflow_guard_report.json`。若退出码非 0 或 `status != "PASS"`，必须按报告失败项补齐上一阶段产物，不得跳步。
+
 ## Quickstart 用途说明
 
 `scripts/quickstart_run.py` 仅用于安装验证。它产出的占位草稿写入 `paper_output/quickstart/`，并写入名为 `quickstart_draft.docx` 的草稿文件，**不会**通过证据门禁，不得对外宣称为最终稿。
@@ -107,6 +117,9 @@ python .claude/skills/paper-workflow-orchestrator/scripts/preflight_check.py
 - `scripts/run_all.py`：废弃迁移提示。
   - 何时用：旧命令误触时提示用户改用 `quickstart_run.py` 或正式 Agent-native workflow。
   - 做什么：只打印迁移提示，不执行生成流程。
+- `scripts/workflow_guard.py`：S0-S8 状态门检查器。
+  - 何时用：正式流程每个阶段开始前或用户要求检查当前进度时。
+  - 做什么：检查预检、审题、模型路线、数据读取报告、建模代码、结果证据、证据门禁、正式稿和格式门禁是否按顺序具备；失败时写入 `paper_output/qa/workflow_guard_report.json` 并返回非 0。
 
 ## 前置约定
 - 目录结构建议为：

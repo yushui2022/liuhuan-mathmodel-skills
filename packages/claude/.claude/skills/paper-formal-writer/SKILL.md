@@ -37,7 +37,8 @@ description: "国赛数学建模正式论文范式、outline、Word 排版和格
   - 输出 `paper_output/final_paper.docx` 和 `paper_output/format_check_report.md`。
   - 使用 `python-docx`，不依赖 LibreOffice。
 - `scripts/check_paper_format.py`
-  - 检查字数、章节、三级标题、图表引用、参考文献、附录、占位符和证据覆盖。
+  - 检查字数、章节、三级标题、图表引用、参考文献、附录、占位符、证据覆盖和 Word 视觉结构。
+  - Word 视觉 QA 至少检查 docx 能否打开、段落数、标题样式数量、图片数量和表格数量是否与索引大体匹配。
   - 输出 `paper_output/format_check_report.md` 与 `paper_output/format_check_report.json`。
 
 ## 正式工作流
